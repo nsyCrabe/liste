@@ -121,7 +121,6 @@ body.mode-magasin #quitter-magasin{display:block;position:fixed;bottom:24px;left
     <div class="ligne2">
       <button type="button" class="photo-btn" id="photo-btn">📷 Photo</button>
       <button type="button" class="photo-btn" id="photo-x" hidden aria-label="Retirer la photo">×</button>
-      <button type="button" class="photo-btn" id="mic-btn" title="Dicter un article" style="padding:0 14px;font-size:18px;">🎤</button>
       <button class="ajouter">Ajouter à la liste</button>
     </div>
     <input type="file" id="fichier" accept="image/*" capture="environment" hidden>
@@ -167,7 +166,7 @@ body.mode-magasin #quitter-magasin{display:block;position:fixed;bottom:24px;left
   </div>
 </footer>
 <script>
-const VERSION='1.5.5';
+const VERSION='1.5.4';
 let invite=null,surInvite=null;
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();invite=e;if(surInvite)surInvite()});
 addEventListener('appinstalled',()=>{invite=null;majInstall()});
@@ -185,6 +184,7 @@ const find=n=>cat.find(c=>norm(c.nom)===norm(n));
 const toNum=v=>{const n=parseFloat(String(v).replace(',','.'));return isNaN(n)?null:Math.max(0,n)};
 function esc(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 
+// Mémorise le produit, son dernier prix et son unité
 function remember(nom,prix,photo,rayon,unite){
   const c=find(nom);
   if(c){if(prix!=null)c.prix=prix;if(photo)c.photo=photo;if(rayon!==undefined)c.rayon=rayon||null;if(unite!==undefined)c.unite=unite||''}
@@ -400,75 +400,6 @@ $('f').onsubmit=e=>{
 $('clear').onclick=()=>{
   if(items.some(x=>x.done)&&confirm('Retirer les articles cochés de la liste ? Ils restent dans vos produits enregistrés.')){items=items.filter(x=>!x.done);save();render()}
 };
-
-// Saisie vocale intelligente (Speech Recognition)
-const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-if(SpeechRecognition){
-  const rec = new SpeechRecognition();
-  rec.lang = 'fr-FR';
-  rec.interimResults = false;
-  
-  $('mic-btn').onclick = () => {$('mic-btn').style.background = 'var(--danger)';
-    rec.start();
-  };
-  
-  rec.onresult = e => {
-    $('mic-btn').style.background = '';
-    const texte = e.results[0][0].transcript.trim();
-    analyserVocal(texte);
-  };
-  
-  rec.onerror = () => { $('mic-btn').style.background = ''; };
-  rec.onend = () => { $('mic-btn').style.background = ''; };
-} else {
-  $('mic-btn').hidden = true; // Masqué si le navigateur ne supporte pas la reconnaissance vocale
-}
-
-function analyserVocal(texte){
-  // Nettoyage des articles de liaison superflus au début (ex: "un", "une", "du", "de la")
-  let t = texte.replace(/^(un|une|des|du|de la|de l'|de)\s+/i, '');
-  
-  let qte = 1;
-  let unite = '';
-  let nom = t;
-  
-  // Expression régulière pour capturer une quantité au début (ex: "2", "3")
-  const matchQte = t.match(/^(\d+)\s*(.*)$/);
-  if(matchQte){
-    qte = parseInt(matchQte[1], 10);
-    t = matchQte[2];
-  }
-  
-  // Expression régulière pour capturer un format/unité (ex: "500g", "1L", "paquet", "boîte", "bouteille")
-  const matchUnite = t.match(/^([\d,.]+\s*(?:g|kg|ml|cl|l|pqt|bte|paquets?|boîtes?|bouteilles?|tranches?))\s+(?:de\s+)?(.*)$/i) ||
-                     t.match(/^(paquet|boîte|bouteille|pot|sachet|brique)\s+(?:de\s+)?(.*)$/i);
-  
-  if(matchUnite){
-    unite = matchUnite[1].trim();
-    nom = matchUnite[2].trim();
-  } else {
-    nom = t.trim();
-  }
-  
-  // Met la première lettre du nom en majuscule pour faire propre
-  if(nom.length > 0) {
-    nom = nom.charAt(0).toUpperCase() + nom.slice(1);
-  }
-  
-  // Remplit automatiquement les champs du formulaire
-  $('nom').value = nom;
-  $('qte').value = qte;
-  $('unite').value = unite;
-  
-  // Si le produit est déjà connu, récupère son prix et son rayon
-  const c = find(nom);
-  if(c){
-    if(c.prix != null) $('prix').value = c.prix;
-    if(c.rayon) $('rayon').value = rayonDe(c.nom);
-    if(c.unite && !unite) $('unite').value = c.unite;
-  }
-  $('prix').focus();
-}
 
 function agrandir(src,nom){$('zoom-img').src=src;$('zoom-img').alt=nom;$('zoom').showModal()}
 $('zoom').onclick=()=>$('zoom').close();
