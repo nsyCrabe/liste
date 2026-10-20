@@ -19,13 +19,14 @@ html{background:var(--bg);height:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;padding:env(safe-area-inset-top) 0 calc(env(safe-area-inset-bottom) + 150px)}
 main{max-width:560px;margin:0 auto;padding:20px 16px}
 .entete{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.entete-actions{display:flex;gap:8px;align-items:center}
 h1{font-size:26px;margin:0;letter-spacing:-.02em}
 .gear{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:10px;width:42px;height:42px;display:grid;place-items:center;cursor:pointer}
 .gear svg{width:22px;height:22px}
 h2{font-size:17px;margin:0 0 10px}
-form{display:grid;grid-template-columns:1fr 92px 64px;gap:8px;margin-bottom:8px}
-input{font:inherit;color:inherit;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;min-width:0}
-input:focus,button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+form{display:grid;grid-template-columns:1fr 80px 52px 68px;gap:8px;margin-bottom:8px}
+input,select{font:inherit;color:inherit;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;min-width:0}
+input:focus,select:focus,button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .ligne2{grid-column:1/-1;display:flex;gap:8px}
 .ajouter{flex:1;font:inherit;font-weight:600;background:var(--accent);color:#fff;border:0;border-radius:10px;padding:12px;cursor:pointer}
 .photo-btn{flex:none;display:flex;align-items:center;gap:6px;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:0 12px;font:inherit;cursor:pointer}
@@ -70,8 +71,6 @@ footer{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:
 .tot b{font-size:24px}
 .tot span{color:var(--mute);font-size:14px}
 .clear{background:none;border:0;color:var(--accent);font:600 14px system-ui;cursor:pointer;padding:6px 0}
-select{font:inherit;color:inherit;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;min-width:0}
-select:focus{outline:2px solid var(--accent);outline-offset:1px}
 #rayon{grid-column:1/-1}
 li.titre{display:block;background:none;border:0;padding:0;margin:18px 0 6px}
 li.titre:first-child{margin-top:0}
@@ -88,21 +87,46 @@ li.titre h3{margin:0;font-size:13px;text-transform:uppercase;letter-spacing:.06e
 .btn-mini{background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;width:34px;height:32px;font-size:14px;cursor:pointer;padding:0}
 .ligne-add{display:flex;gap:8px;margin-bottom:18px}
 .ligne-add input{flex:1}
+
+/* Mode Magasin / Plein écran */
+#quitter-magasin{display:none}
+body.mode-magasin form, body.mode-magasin footer{display:none!important}
+body.mode-magasin #liste li{padding:16px;font-size:1.15rem}
+body.mode-magasin #liste input[type=checkbox]{width:32px;height:32px}
+body.mode-magasin .nom img, body.mode-magasin .vignette{width:52px;height:52px}
+body.mode-magasin .prix{font-size:1.1rem;padding:8px 12px}
+body.mode-magasin #quitter-magasin{display:block;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:1000;background:var(--accent);color:#fff;border:0;border-radius:999px;padding:14px 28px;font:600 16px system-ui;box-shadow:0 6px 20px rgba(0,0,0,0.4);cursor:pointer}
 </style>
 </head>
 <body>
 <main>
   <div class="entete">
     <h1>Ma liste de courses</h1>
-    <button class="gear" id="ouvrir-reg" aria-label="Paramètres">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
-    </button>
+    <div class="entete-actions">
+      <button class="gear" id="ouvrir-magasin" aria-label="Mode Magasin">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+      </button>
+      <button class="gear" id="ouvrir-reg" aria-label="Paramètres">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+      </button>
+    </div>
   </div>
   <form id="f" autocomplete="off">
     <input id="nom" list="suggestions" placeholder="Article (ex. lait)" required aria-label="Article">
     <datalist id="suggestions"></datalist>
     <input id="prix" type="number" inputmode="decimal" step="0.01" min="0" placeholder="Prix €" aria-label="Prix en euros">
     <input id="qte" type="number" inputmode="numeric" min="1" value="1" aria-label="Quantité">
+    <select id="unite" aria-label="Unité">
+      <option value="">Unité</option>
+      <option value="g">g</option>
+      <option value="kg">kg</option>
+      <option value="ml">ml</option>
+      <option value="cl">cl</option>
+      <option value="L">L</option>
+      <option value="pqt">pqt</option>
+      <option value="bte">bte</option>
+      <option value="pièce">pièce</option>
+    </select>
     <select id="rayon" aria-label="Rayon"></select>
     <div class="ligne2">
       <button type="button" class="photo-btn" id="photo-btn">📷 Photo</button>
@@ -113,6 +137,7 @@ li.titre h3{margin:0;font-size:13px;text-transform:uppercase;letter-spacing:.06e
   </form>
   <ul id="liste"></ul>
 </main>
+<button id="quitter-magasin">Quitter le mode Magasin</button>
 <dialog id="reglages" aria-labelledby="reg-titre">
   <h2 id="reg-titre">Paramètres</h2>
   <p>Version de l'app : <b id="version"></b></p>
@@ -151,7 +176,7 @@ li.titre h3{margin:0;font-size:13px;text-transform:uppercase;letter-spacing:.06e
   </div>
 </footer>
 <script>
-const VERSION='1.5.2';
+const VERSION='1.5.3';
 let invite=null,surInvite=null;
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();invite=e;if(surInvite)surInvite()});
 addEventListener('appinstalled',()=>{invite=null;majInstall()});
@@ -169,19 +194,17 @@ const find=n=>cat.find(c=>norm(c.nom)===norm(n));
 const toNum=v=>{const n=parseFloat(String(v).replace(',','.'));return isNaN(n)?null:Math.max(0,n)};
 function esc(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 
-// Mémorise le produit et son dernier prix connu
-// rayon : undefined = inchangé, '' = aucun rayon
-function remember(nom,prix,photo,rayon){
+// Mémorise le produit, son dernier prix et son unité
+function remember(nom,prix,photo,rayon,unite){
   const c=find(nom);
-  if(c){if(prix!=null)c.prix=prix;if(photo)c.photo=photo;if(rayon!==undefined)c.rayon=rayon||null}
-  else if(prix!=null||photo||rayon)cat.push({nom:nom.trim(),prix:prix??null,photo:photo||null,rayon:rayon||null});
+  if(c){if(prix!=null)c.prix=prix;if(photo)c.photo=photo;if(rayon!==undefined)c.rayon=rayon||null;if(unite!==undefined)c.unite=unite||''}
+  else if(prix!=null||photo||rayon||unite)cat.push({nom:nom.trim(),prix:prix??null,photo:photo||null,rayon:rayon||null,unite:unite||''});
 }
-items.forEach(i=>remember(i.nom,i.prix)); // reprend les anciennes listes
+items.forEach(i=>remember(i.nom,i.prix,undefined,undefined,i.unite));
 
-// Rayon d'un produit ('' si aucun ou si le rayon n'existe plus)
 const rayonDe=nom=>{const c=find(nom);return c&&c.rayon&&rayons.includes(c.rayon)?c.rayon:''};
 const tagRayon=nom=>{const r=rayonDe(nom);return `<button class="rayon-tag ${r?'':'vide'}" aria-label="Rayon de ${esc(nom)} : ${r?esc(r):'aucun'}. Modifier">${r?esc(r):'+ rayon'}</button>`};
-function setRayon(nom,r){const it=items.find(i=>norm(i.nom)===norm(nom));remember(nom,it?it.prix:undefined,null,r)}
+function setRayon(nom,r){const it=items.find(i=>norm(i.nom)===norm(nom));remember(nom,it?it.prix:undefined,null,r,it?it.unite:undefined)}
 let rayonNom=null;
 function ouvrirRayon(nom){
   rayonNom=nom;
@@ -200,21 +223,20 @@ function fillSelect(){
   s.value=rayons.includes(v)?v:'';
 }
 
-function addItem(nom,prix,qte){
+function addItem(nom,prix,qte,unite){
   const ex=items.find(i=>norm(i.nom)===norm(nom));
-  if(ex){ex.qte+=qte;ex.done=false;if(prix!=null)ex.prix=prix}
-  else items.unshift({nom:nom.trim(),prix,qte,done:false});
+  if(ex){ex.qte+=qte;ex.done=false;if(prix!=null)ex.prix=prix;if(unite)ex.unite=unite}
+  else items.unshift({nom:nom.trim(),prix,qte,unite:unite||'',done:false});
 }
 
 function render(){
   const ul=$('liste'); ul.innerHTML='';
   if(!items.length)ul.innerHTML='<p class="vide-msg">La liste est vide. Ajoutez un article ci-dessus ou choisissez-en dans « Mes produits enregistrés ».</p>';
-  // Regroupe par rayon dans l'ordre du magasin ; « Sans rayon » en dernier
   const groupes=rayons.map(n=>({nom:n,l:[]})); groupes.push({nom:'',l:[]});
   items.forEach(it=>{const r=rayonDe(it.nom);(groupes.find(g=>g.nom===r)||groupes[groupes.length-1]).l.push(it)});
   groupes.forEach(g=>{
     if(!g.l.length)return;
-    g.l.sort((a,b)=>Number(!!a.done)-Number(!!b.done)); // cochés en bas du rayon
+    g.l.sort((a,b)=>Number(!!a.done)-Number(!!b.done));
     const t=document.createElement('li'); t.className='titre';
     t.innerHTML=`<h3>${esc(g.nom||'Sans rayon')} · ${g.l.length}</h3>`;
     ul.appendChild(t);
@@ -222,8 +244,9 @@ function render(){
       const li=document.createElement('li'); if(it.done)li.className='done';
       const total=(it.prix||0)*it.qte;
       const cc=find(it.nom), img=cc&&cc.photo?`<img src="${cc.photo}" alt="">`:'';
+      const detailQte=it.qte>1 || it.unite ? `× ${it.qte}${it.unite?' '+esc(it.unite):''}${it.prix!=null?' · '+eur(it.prix)+' /'+(it.unite||'unité'):''}` : '';
       li.innerHTML=`<input type="checkbox" ${it.done?'checked':''} aria-label="Cocher ${esc(it.nom)}">
-        <div class="nom">${img}<span>${esc(it.nom)}<small>${it.qte>1?'× '+it.qte+(it.prix!=null?' · '+eur(it.prix)+' pièce':''):''}</small>${tagRayon(it.nom)}</span></div>
+        <div class="nom">${img}<span>${esc(it.nom)}<small>${detailQte}</small>${tagRayon(it.nom)}</span></div>
         <button class="prix ${it.prix==null?'vide':''}" aria-label="Modifier le prix">${it.prix==null?'+ prix':eur(total)}</button>
         <button class="sup" aria-label="Retirer ${esc(it.nom)} de la liste">×</button>`;
       li.children[0].onchange=e=>{it.done=e.target.checked;save();render()};
@@ -232,7 +255,7 @@ function render(){
       li.children[2].onclick=()=>{
         const v=prompt('Nouveau prix unitaire de « '+it.nom+' » (€)',it.prix??'');
         if(v===null)return;
-        it.prix=toNum(v); remember(it.nom,it.prix); save(); render();
+        it.prix=toNum(v); remember(it.nom,it.prix,undefined,undefined,it.unite); save(); render();
       };
       li.children[3].onclick=()=>{items.splice(items.indexOf(it),1);save();render()};
       ul.appendChild(li);
@@ -243,7 +266,6 @@ function render(){
   fillSelect();renderRayons();renderCat();
 }
 
-// Paramètres : ordre des rayons
 function renderRayons(){
   const ul=$('reg-rayons'); ul.innerHTML='';
   if(!rayons.length)ul.innerHTML='<p class="vide-msg" style="padding:8px 0">Aucun rayon. Ajoutez-en un ci-dessous.</p>';
@@ -261,7 +283,7 @@ function renderRayons(){
     ul.appendChild(li);
   });
 }
-// Glisser-déposer d'un rayon par sa poignée (tactile et souris)
+
 function glisser(e,li){
   if(e.button>0)return;
   e.preventDefault();
@@ -278,10 +300,10 @@ function glisser(e,li){
       const r=s.getBoundingClientRect();
       if(y<r.top+r.height/2){ref=s;break}
     }
-    if(li.nextElementSibling!==ref)ul.insertBefore(li,ref); // les autres lignes s'écartent
+    if(li.nextElementSibling!==ref)ul.insertBefore(li,ref);
     li.style.transform=`translateY(${y-grab-li.getBoundingClientRect().top}px)`;
   };
-  const defile=()=>{ // défilement automatique près des bords de la fenêtre
+  const defile=()=>{
     const r=dlg.getBoundingClientRect();
     if(y<r.top+50)dlg.scrollTop-=10; else if(y>r.bottom-50)dlg.scrollTop+=10;
     place(); raf=requestAnimationFrame(defile);
@@ -294,13 +316,14 @@ function glisser(e,li){
     window.removeEventListener('pointercancel',fin);
     const ordre=[...ul.children].map(x=>x.dataset.nom);
     if(ordre.length===rayons.length&&ordre.some((n,k)=>n!==rayons[k])){rayons=ordre;save()}
-    render(); // remet les lignes à leur place et applique le nouvel ordre à la liste
+    render();
   };
   window.addEventListener('pointermove',bouge);
   window.addEventListener('pointerup',fin);
   window.addEventListener('pointercancel',fin);
   defile();
 }
+
 function renommer(i){
   const v=prompt('Nouveau nom du rayon',rayons[i]); if(v===null)return;
   const n=v.trim(), old=rayons[i];
@@ -333,7 +356,7 @@ function renderCat(){
     const li=document.createElement('li');
     const ex=items.find(i=>norm(i.nom)===norm(c.nom));
     const vig=c.photo?`<img src="${c.photo}" alt="">`:'📷';
-    li.innerHTML=`<div class="nom"><button class="vignette" aria-label="Photo de ${esc(c.nom)}">${vig}</button><span>${esc(c.nom)}<small>${ex?'Dans la liste : × '+ex.qte:''}</small>${tagRayon(c.nom)}</span></div>
+    li.innerHTML=`<div class="nom"><button class="vignette" aria-label="Photo de ${esc(c.nom)}">${vig}</button><span>${esc(c.nom)}<small>${ex?'Dans la liste : × '+ex.qte+(ex.unite?' '+ex.uniteี่:''):''}</small>${tagRayon(c.nom)}</span></div>
       <button class="prix ${c.prix==null?'vide':''}" aria-label="Modifier le prix de ${esc(c.nom)}">${c.prix==null?'+ prix':eur(c.prix)}</button>
       <button class="moins" aria-label="Retirer un ${esc(c.nom)}" ${ex&&ex.qte>1?'':'disabled'}>−</button>
       <button class="ajout" aria-label="Ajouter ${esc(c.nom)} à la liste">+</button>
@@ -344,7 +367,7 @@ function renderCat(){
       c.prix=n; items.filter(i=>norm(i.nom)===norm(c.nom)).forEach(i=>i.prix=n); save(); render();
     };
     li.children[2].onclick=()=>{if(ex&&ex.qte>1){ex.qte--;save();render()}};
-    li.children[3].onclick=()=>{addItem(c.nom,c.prix,1);save();render()};
+    li.children[3].onclick=()=>{addItem(c.nom,c.prix,1,c.unite);save();render()};
     li.children[4].onclick=()=>{if(confirm('Supprimer « '+c.nom+' » des produits enregistrés ?')){cat=cat.filter(x=>x!==c);save();render()}};
     li.querySelector('.rayon-tag').onclick=()=>ouvrirRayon(c.nom);
     li.querySelector('.vignette').onclick=()=>{
@@ -355,21 +378,24 @@ function renderCat(){
   });
 }
 
-// Affiche le prix enregistré quand on tape un produit connu
 $('nom').addEventListener('input',()=>{
   const c=find($('nom').value);$('prix').placeholder=c&&c.prix!=null?eur(c.prix)+' (enregistré)':'Prix €';
-  if(c)$('rayon').value=rayonDe(c.nom); // produit connu : reprend son rayon
+  if(c){
+    if(c.rayon)$('rayon').value=rayonDe(c.nom);
+    if(c.unite)$('unite').value=c.unite;
+  }
 });
 
 $('f').onsubmit=e=>{
   e.preventDefault();
   const nom=$('nom').value.trim(), c=find(nom);
   let p=toNum($('prix').value);
-  if(p===null&&c)p=c.prix;        // prix vide : reprend le prix enregistré
-  remember(nom,p,photoEnCours,$('rayon').value);   // prix ou rayon différent : mise à jour
-  addItem(nom,p,Math.max(1,parseInt($('qte').value)||1));
+  if(p===null&&c)p=c.prix;
+  const unite=$('unite').value;
+  remember(nom,p,photoEnCours,$('rayon').value,unite);
+  addItem(nom,p,Math.max(1,parseInt($('qte').value)||1),unite);
   save();render();
-  $('nom').value='';$('prix').value='';$('qte').value=1;$('rayon').value='';$('prix').placeholder='Prix €';$('nom').focus();
+  $('nom').value='';$('prix').value='';$('qte').value=1;$('unite').value='';$('rayon').value='';$('prix').placeholder='Prix €';$('nom').focus();
   photoEnCours=null;majPhoto();
 };
 $('clear').onclick=()=>{
@@ -378,7 +404,7 @@ $('clear').onclick=()=>{
 
 function agrandir(src,nom){$('zoom-img').src=src;$('zoom-img').alt=nom;$('zoom').showModal()}
 $('zoom').onclick=()=>$('zoom').close();
-// Photos : carré de 400 px, assez net pour l'agrandir tout en restant léger
+
 function miniature(file){
   return new Promise((ok,ko)=>{
     const img=new Image(), u=URL.createObjectURL(file);
@@ -405,10 +431,13 @@ $('photo-x').onclick=()=>{photoEnCours=null;majPhoto()};$('fichier').onchange=as
     else{photoEnCours=d;majPhoto()}
   }catch(_){alert("Cette photo n'a pas pu être lue. Réessayez.")}
 };
-$('p-nouvelle').onclick=()=>{$('photo-dlg').close();$('fichier').click()};$('p-suppr').onclick=()=>{if(cible){cible.photo=null;cible=null;save();render()}$('photo-dlg').close()};$('p-fermer').onclick=()=>{cible=null;$('photo-dlg').close()};$('photo-grand').onclick=()=>{cible=null;$('photo-dlg').close()};$('photo-dlg').addEventListener('click',e=>{ // clic en dehors de la fenêtre : on ferme
+$('p-nouvelle').onclick=()=>{$('photo-dlg').close();$('fichier').click()};$('p-suppr').onclick=()=>{if(cible){cible.photo=null;cible=null;save();render()}$('photo-dlg').close()};$('p-fermer').onclick=()=>{cible=null;$('photo-dlg').close()};$('photo-grand').onclick=()=>{cible=null;$('photo-dlg').close()};$('photo-dlg').addEventListener('click',e=>{
   const r=e.currentTarget.getBoundingClientRect();
   if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom){cible=null;e.currentTarget.close()}
 });
+
+// Mode Magasin
+$('ouvrir-magasin').onclick=()=>document.body.classList.add('mode-magasin');$('quitter-magasin').onclick=()=>document.body.classList.remove('mode-magasin');
 
 // Paramètres
 $('version').textContent='v'+VERSION;
@@ -424,7 +453,7 @@ function majInstall(){
 }
 $('installer').onclick=async()=>{
   const t=$('install-etat'), ios=/iphone|ipad|ipod/i.test(navigator.userAgent);
-  if(!invite&&!ios){ // le navigateur peut mettre quelques secondes à proposer l'installation
+  if(!invite&&!ios){
     t.textContent='Préparation…';
     await new Promise(r=>{surInvite=r;setTimeout(r,2500)}); surInvite=null;
   }
@@ -450,7 +479,6 @@ $('reglages').addEventListener('click',e=>{if(e.target===$('reglages'))$('reglag
       const keys=await caches.keys();
       await Promise.all(keys.map(k=>caches.delete(k)));
     }
-    // Recharge les fichiers depuis le réseau, sans toucher à vos listes ni à vos produits
     await Promise.all(['./','index.html','manifest.json','sw.js'].map(u=>fetch(u,{cache:'reload'}).catch(()=>{})));
     etat.textContent='Terminé, rechargement…';
     setTimeout(()=>location.replace(location.pathname+'?maj='+Date.now()),400);
