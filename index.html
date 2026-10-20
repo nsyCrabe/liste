@@ -112,9 +112,7 @@ li.titre h3{margin:0;font-size:13px;text-transform:uppercase;letter-spacing:.06e
     <input type="file" id="fichier" accept="image/*" capture="environment" hidden>
   </form>
   <ul id="liste"></ul>
-
-
-  </main>
+</main>
 <dialog id="reglages" aria-labelledby="reg-titre">
   <h2 id="reg-titre">Paramètres</h2>
   <p>Version de l'app : <b id="version"></b></p>
@@ -187,8 +185,7 @@ function setRayon(nom,r){const it=items.find(i=>norm(i.nom)===norm(nom));remembe
 let rayonNom=null;
 function ouvrirRayon(nom){
   rayonNom=nom;
-  const cur=rayonDe(nom), box=$('rayon-choix'); box.innerHTML='';
-  $('rayon-titre').textContent=nom;
+  const cur=rayonDe(nom), box=$('rayon-choix'); box.innerHTML='';$('rayon-titre').textContent=nom;
   [''].concat(rayons).forEach(r=>{
     const b=document.createElement('button'); b.className='maj';
     b.textContent=(r===cur?'✓ ':'')+(r||'Sans rayon');
@@ -242,8 +239,7 @@ function render(){
     });
   });
   const sum=l=>l.reduce((s,x)=>s+(x.prix||0)*x.qte,0);
-  $('total').textContent=eur(sum(items));
-  $('pris').textContent='Dans le panier : '+eur(sum(items.filter(x=>x.done)));
+  $('total').textContent=eur(sum(items));$('pris').textContent='Dans le panier : '+eur(sum(items.filter(x=>x.done)));
   fillSelect();renderRayons();renderCat();
 }
 
@@ -293,16 +289,16 @@ function glisser(e,li){
   const bouge=ev=>{y=ev.clientY};
   const fin=()=>{
     cancelAnimationFrame(raf);
-    h.removeEventListener('pointermove',bouge);
-    h.removeEventListener('pointerup',fin);
-    h.removeEventListener('pointercancel',fin);
+    window.removeEventListener('pointermove',bouge);
+    window.removeEventListener('pointerup',fin);
+    window.removeEventListener('pointercancel',fin);
     const ordre=[...ul.children].map(x=>x.dataset.nom);
     if(ordre.length===rayons.length&&ordre.some((n,k)=>n!==rayons[k])){rayons=ordre;save()}
     render(); // remet les lignes à leur place et applique le nouvel ordre à la liste
   };
-  h.addEventListener('pointermove',bouge);
-  h.addEventListener('pointerup',fin);
-  h.addEventListener('pointercancel',fin);
+  window.addEventListener('pointermove',bouge);
+  window.addEventListener('pointerup',fin);
+  window.addEventListener('pointercancel',fin);
   defile();
 }
 function renommer(i){
@@ -324,9 +320,7 @@ function ajouterRayon(){
   inp.value='';
 }
 $('rayon-ajouter').onclick=ajouterRayon;
-$('rayon-nouveau').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();ajouterRayon()}});
-$('rayon-fermer').onclick=()=>$('rayon-dlg').close();
-$('rayon-dlg').addEventListener('click',e=>{if(e.target===$('rayon-dlg'))$('rayon-dlg').close()});
+$('rayon-nouveau').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();ajouterRayon()}});$('rayon-fermer').onclick=()=>$('rayon-dlg').close();$('rayon-dlg').addEventListener('click',e=>{if(e.target===$('rayon-dlg'))$('rayon-dlg').close()});
 
 function renderCat(){
   cat.sort((a,b)=>a.nom.localeCompare(b.nom,'fr'));
@@ -355,7 +349,7 @@ function renderCat(){
     li.querySelector('.rayon-tag').onclick=()=>ouvrirRayon(c.nom);
     li.querySelector('.vignette').onclick=()=>{
       cible=c;
-      if(c.photo){$('photo-titre').textContent=c.nom;$('photo-grand').src=c.photo;$('photo-grand').alt=c.nom;$('photo-dlg').showModal()}else $('fichier').click();
+      if(c.photo){$('photo-titre').textContent=c.nom;$('photo-grand').src=c.photo;$('photo-grand').alt=c.nom;$('photo-dlg').showModal()}else$('fichier').click();
     };
     ul.appendChild(li);
   });
@@ -363,8 +357,7 @@ function renderCat(){
 
 // Affiche le prix enregistré quand on tape un produit connu
 $('nom').addEventListener('input',()=>{
-  const c=find($('nom').value);
-  $('prix').placeholder=c&&c.prix!=null?eur(c.prix)+' (enregistré)':'Prix €';
+  const c=find($('nom').value);$('prix').placeholder=c&&c.prix!=null?eur(c.prix)+' (enregistré)':'Prix €';
   if(c)$('rayon').value=rayonDe(c.nom); // produit connu : reprend son rayon
 });
 
@@ -404,8 +397,7 @@ function majPhoto(){
   $('photo-x').hidden=!photoEnCours;
 }
 $('photo-btn').onclick=()=>{cible=null;$('fichier').click()};
-$('photo-x').onclick=()=>{photoEnCours=null;majPhoto()};
-$('fichier').onchange=async e=>{
+$('photo-x').onclick=()=>{photoEnCours=null;majPhoto()};$('fichier').onchange=async e=>{
   const f=e.target.files[0]; e.target.value=''; if(!f)return;
   try{
     const d=await miniature(f);
@@ -413,11 +405,7 @@ $('fichier').onchange=async e=>{
     else{photoEnCours=d;majPhoto()}
   }catch(_){alert("Cette photo n'a pas pu être lue. Réessayez.")}
 };
-$('p-nouvelle').onclick=()=>{$('photo-dlg').close();$('fichier').click()};
-$('p-suppr').onclick=()=>{if(cible){cible.photo=null;cible=null;save();render()}$('photo-dlg').close()};
-$('p-fermer').onclick=()=>{cible=null;$('photo-dlg').close()};
-$('photo-grand').onclick=()=>{cible=null;$('photo-dlg').close()};
-$('photo-dlg').addEventListener('click',e=>{ // clic en dehors de la fenêtre : on ferme
+$('p-nouvelle').onclick=()=>{$('photo-dlg').close();$('fichier').click()};$('p-suppr').onclick=()=>{if(cible){cible.photo=null;cible=null;save();render()}$('photo-dlg').close()};$('p-fermer').onclick=()=>{cible=null;$('photo-dlg').close()};$('photo-grand').onclick=()=>{cible=null;$('photo-dlg').close()};$('photo-dlg').addEventListener('click',e=>{ // clic en dehors de la fenêtre : on ferme
   const r=e.currentTarget.getBoundingClientRect();
   if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom){cible=null;e.currentTarget.close()}
 });
@@ -451,8 +439,7 @@ $('installer').onclick=async()=>{
 };
 $('ouvrir-reg').onclick=()=>{majInstall();$('reglages').showModal()};
 $('fermer-reg').onclick=()=>$('reglages').close();
-$('reglages').addEventListener('click',e=>{if(e.target===$('reglages'))$('reglages').close()});
-$('maj').onclick=async()=>{
+$('reglages').addEventListener('click',e=>{if(e.target===$('reglages'))$('reglages').close()});$('maj').onclick=async()=>{
   const etat=$('maj-etat'); etat.textContent='Mise à jour en cours…';
   try{
     if('serviceWorker' in navigator){
