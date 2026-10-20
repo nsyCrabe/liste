@@ -132,12 +132,10 @@ body.mode-magasin #quitter-magasin{display:block;position:fixed;bottom:24px;left
 <dialog id="reglages" aria-labelledby="reg-titre">
   <h2 id="reg-titre">Paramètres</h2>
   <p>Version de l'app : <b id="version"></b></p>
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;margin-bottom:6px">
-    <h2 style="margin:0">Ordre des rayons</h2>
-    <button class="maj" id="toggle-ordre" style="padding:6px 10px;font-size:13px">Modifier l'ordre</button>
-  </div>
-  <p>Activez le mode modification pour glisser les rayons dans l'ordre de votre magasin.</p>
+  <h2>Ordre des rayons</h2>
+  <p>Classez-les dans l'ordre de votre magasin : la liste suit cet ordre.</p>
   <ul id="reg-rayons"></ul>
+  <div id="zone-centre-ordre" style="margin:16px 0;text-align:center"></div>
   <div class="ligne-add">
     <input id="rayon-nouveau" placeholder="Nouveau rayon" enterkeyhint="done" aria-label="Nom du nouveau rayon">
     <button class="maj" id="rayon-ajouter">Ajouter</button>
@@ -170,7 +168,7 @@ body.mode-magasin #quitter-magasin{display:block;position:fixed;bottom:24px;left
   </div>
 </footer>
 <script>
-const VERSION='1.5.7';
+const VERSION='1.5.8';
 let invite=null,surInvite=null;
 let editionOrdreActive=false;
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();invite=e;if(surInvite)surInvite()});
@@ -263,8 +261,19 @@ function render(){
 function renderRayons(){
   const ul=$('reg-rayons'); ul.innerHTML='';
   if(editionOrdreActive) ul.classList.add('edition-active'); else ul.classList.remove('edition-active');
-  $('toggle-ordre').textContent=editionOrdreActive ? 'Terminer' : "Modifier l'ordre";
   
+  const zone=$('zone-centre-ordre');
+  zone.innerHTML='';
+  const btnToggle=document.createElement('button');
+  btnToggle.className='maj';
+  btnToggle.style.cssText='background:var(--line);font-weight:600;padding:12px 20px;width:100%;cursor:pointer';
+  btnToggle.textContent=editionOrdreActive ? '✓ Terminer' : '↕ Modifier l\'ordre des rayons';
+  btnToggle.onclick=()=>{
+    editionOrdreActive=!editionOrdreActive;
+    renderRayons();
+  };
+  zone.appendChild(btnToggle);
+
   if(!rayons.length)ul.innerHTML='<p class="vide-msg" style="padding:8px 0">Aucun rayon. Ajoutez-en un ci-dessous.</p>';
   rayons.forEach((n,i)=>{
     const li=document.createElement('li');
@@ -283,11 +292,6 @@ function renderRayons(){
     ul.appendChild(li);
   });
 }
-
-$('toggle-ordre').onclick=()=>{
-  editionOrdreActive=!editionOrdreActive;
-  renderRayons();
-};
 
 function glisser(e,li){
   if(e.button>0)return;
