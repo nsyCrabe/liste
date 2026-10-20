@@ -24,7 +24,7 @@ h1{font-size:26px;margin:0;letter-spacing:-.02em}
 .gear{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:10px;width:42px;height:42px;display:grid;place-items:center;cursor:pointer}
 .gear svg{width:22px;height:22px}
 h2{font-size:17px;margin:0 0 10px}
-form{display:grid;grid-template-columns:1fr 80px 52px 68px;gap:8px;margin-bottom:8px}
+form{display:grid;grid-template-columns:1fr 80px 52px 80px;gap:8px;margin-bottom:8px}
 input,select{font:inherit;color:inherit;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;min-width:0}
 input:focus,select:focus,button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .ligne2{grid-column:1/-1;display:flex;gap:8px}
@@ -56,7 +56,7 @@ li input[type=checkbox]{width:22px;height:22px;accent-color:var(--accent);paddin
 .vide-msg{text-align:center;color:var(--mute);padding:24px 0}
 #panneau{max-width:560px;margin:0 auto 8px;max-height:45vh;overflow-y:auto}
 #panneau ul{margin:0}
-#panneau li{grid-template-columns:1fr auto 36px 36px 32px;background:var(--bg);gap:8px}
+#panneau li{grid-template-columns:1fr auto 32px 36px 36px 32px;background:var(--bg);gap:6px}
 .cat-btn{width:100%;max-width:560px;margin:0 auto 8px;display:flex;justify-content:space-between;align-items:center;font:600 15px system-ui;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 12px;cursor:pointer}
 .ajout,.moins{background:var(--accent);color:#fff;border:0;border-radius:8px;width:36px;height:32px;font-size:20px;cursor:pointer}
 .moins{background:var(--bg);color:var(--ink);border:1px solid var(--line)}
@@ -116,17 +116,7 @@ body.mode-magasin #quitter-magasin{display:block;position:fixed;bottom:24px;left
     <datalist id="suggestions"></datalist>
     <input id="prix" type="number" inputmode="decimal" step="0.01" min="0" placeholder="Prix €" aria-label="Prix en euros">
     <input id="qte" type="number" inputmode="numeric" min="1" value="1" aria-label="Quantité">
-    <select id="unite" aria-label="Unité">
-      <option value="">Unité</option>
-      <option value="g">g</option>
-      <option value="kg">kg</option>
-      <option value="ml">ml</option>
-      <option value="cl">cl</option>
-      <option value="L">L</option>
-      <option value="pqt">pqt</option>
-      <option value="bte">bte</option>
-      <option value="pièce">pièce</option>
-    </select>
+    <input id="unite" placeholder="Format (ex. 500g)" aria-label="Format ou unité">
     <select id="rayon" aria-label="Rayon"></select>
     <div class="ligne2">
       <button type="button" class="photo-btn" id="photo-btn">📷 Photo</button>
@@ -176,7 +166,7 @@ body.mode-magasin #quitter-magasin{display:block;position:fixed;bottom:24px;left
   </div>
 </footer>
 <script>
-const VERSION='1.5.3';
+const VERSION='1.5.4';
 let invite=null,surInvite=null;
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();invite=e;if(surInvite)surInvite()});
 addEventListener('appinstalled',()=>{invite=null;majInstall()});
@@ -244,7 +234,7 @@ function render(){
       const li=document.createElement('li'); if(it.done)li.className='done';
       const total=(it.prix||0)*it.qte;
       const cc=find(it.nom), img=cc&&cc.photo?`<img src="${cc.photo}" alt="">`:'';
-      const detailQte=it.qte>1 || it.unite ? `× ${it.qte}${it.unite?' '+esc(it.unite):''}${it.prix!=null?' · '+eur(it.prix)+' /'+(it.unite||'unité'):''}` : '';
+      const detailQte=it.qte>1 || it.unite ? `× ${it.qte}${it.unite?' '+esc(it.unite):''}${it.prix!=null?' · '+eur(it.prix)+' pièce':''}` : '';
       li.innerHTML=`<input type="checkbox" ${it.done?'checked':''} aria-label="Cocher ${esc(it.nom)}">
         <div class="nom">${img}<span>${esc(it.nom)}<small>${detailQte}</small>${tagRayon(it.nom)}</span></div>
         <button class="prix ${it.prix==null?'vide':''}" aria-label="Modifier le prix">${it.prix==null?'+ prix':eur(total)}</button>
@@ -356,8 +346,9 @@ function renderCat(){
     const li=document.createElement('li');
     const ex=items.find(i=>norm(i.nom)===norm(c.nom));
     const vig=c.photo?`<img src="${c.photo}" alt="">`:'📷';
-    li.innerHTML=`<div class="nom"><button class="vignette" aria-label="Photo de ${esc(c.nom)}">${vig}</button><span>${esc(c.nom)}<small>${ex?'Dans la liste : × '+ex.qte+(ex.unite?' '+ex.uniteี่:''):''}</small>${tagRayon(c.nom)}</span></div>
+    li.innerHTML=`<div class="nom"><button class="vignette" aria-label="Photo de ${esc(c.nom)}">${vig}</button><span>${esc(c.nom)}<small>${ex?'Dans la liste : × '+ex.qte+(ex.unite?' '+ex.unite:''):''}</small>${tagRayon(c.nom)}</span></div>
       <button class="prix ${c.prix==null?'vide':''}" aria-label="Modifier le prix de ${esc(c.nom)}">${c.prix==null?'+ prix':eur(c.prix)}</button>
+      <button class="btn-mini" aria-label="Renommer ${esc(c.nom)}">✎</button>
       <button class="moins" aria-label="Retirer un ${esc(c.nom)}" ${ex&&ex.qte>1?'':'disabled'}>−</button>
       <button class="ajout" aria-label="Ajouter ${esc(c.nom)} à la liste">+</button>
       <button class="sup" aria-label="Supprimer ${esc(c.nom)} des produits enregistrés">×</button>`;
@@ -366,9 +357,17 @@ function renderCat(){
       const n=v===null?null:toNum(v); if(n===null)return;
       c.prix=n; items.filter(i=>norm(i.nom)===norm(c.nom)).forEach(i=>i.prix=n); save(); render();
     };
-    li.children[2].onclick=()=>{if(ex&&ex.qte>1){ex.qte--;save();render()}};
-    li.children[3].onclick=()=>{addItem(c.nom,c.prix,1,c.unite);save();render()};
-    li.children[4].onclick=()=>{if(confirm('Supprimer « '+c.nom+' » des produits enregistrés ?')){cat=cat.filter(x=>x!==c);save();render()}};
+    li.children[2].onclick=()=>{
+      const v=prompt('Nouveau nom du produit',c.nom); if(v===null)return;
+      const n=v.trim();
+      if(!n||(norm(n)!==norm(c.nom)&&cat.some(x=>norm(x.nom)===norm(n))))return;
+      const old=c.nom; c.nom=n;
+      items.filter(i=>norm(i.nom)===norm(old)).forEach(i=>i.nom=n);
+      save(); render();
+    };
+    li.children[3].onclick=()=>{if(ex&&ex.qte>1){ex.qte--;save();render()}};
+    li.children[4].onclick=()=>{addItem(c.nom,c.prix,1,c.unite);save();render()};
+    li.children[5].onclick=()=>{if(confirm('Supprimer « '+c.nom+' » des produits enregistrés ?')){cat=cat.filter(x=>x!==c);save();render()}};
     li.querySelector('.rayon-tag').onclick=()=>ouvrirRayon(c.nom);
     li.querySelector('.vignette').onclick=()=>{
       cible=c;
@@ -391,7 +390,7 @@ $('f').onsubmit=e=>{
   const nom=$('nom').value.trim(), c=find(nom);
   let p=toNum($('prix').value);
   if(p===null&&c)p=c.prix;
-  const unite=$('unite').value;
+  const unite=$('unite').value.trim();
   remember(nom,p,photoEnCours,$('rayon').value,unite);
   addItem(nom,p,Math.max(1,parseInt($('qte').value)||1),unite);
   save();render();
