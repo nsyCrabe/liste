@@ -70,6 +70,22 @@ footer{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:
 .tot b{font-size:24px}
 .tot span{color:var(--mute);font-size:14px}
 .clear{background:none;border:0;color:var(--accent);font:600 14px system-ui;cursor:pointer;padding:6px 0}
+select{font:inherit;color:inherit;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;min-width:0}
+select:focus{outline:2px solid var(--accent);outline-offset:1px}
+#rayon{grid-column:1/-1}
+li.titre{display:block;background:none;border:0;padding:0;margin:18px 0 6px}
+li.titre:first-child{margin-top:0}
+li.titre h3{margin:0;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute)}
+.rayon-tag{display:inline-block;margin-top:4px;font:600 12px system-ui;color:var(--accent);background:none;border:1px solid var(--line);border-radius:999px;padding:2px 9px;cursor:pointer}
+.rayon-tag.vide{border-style:dashed;color:var(--mute)}
+#rayon-dlg .maj{display:block;width:100%;margin-bottom:8px;text-align:left}
+#reg-rayons{margin:8px 0 10px}
+#reg-rayons li{grid-template-columns:1fr 34px 34px 34px 28px;gap:4px;padding:6px 8px;margin-bottom:6px}
+#reg-rayons .rn{min-width:0;overflow-wrap:anywhere}
+.btn-mini{background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;width:34px;height:32px;font-size:14px;cursor:pointer;padding:0}
+.btn-mini:disabled{opacity:.35;cursor:default}
+.ligne-add{display:flex;gap:8px;margin-bottom:18px}
+.ligne-add input{flex:1}
 </style>
 </head>
 <body>
@@ -85,6 +101,7 @@ footer{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:
     <datalist id="suggestions"></datalist>
     <input id="prix" type="number" inputmode="decimal" step="0.01" min="0" placeholder="Prix €" aria-label="Prix en euros">
     <input id="qte" type="number" inputmode="numeric" min="1" value="1" aria-label="Quantité">
+    <select id="rayon" aria-label="Rayon"></select>
     <div class="ligne2">
       <button type="button" class="photo-btn" id="photo-btn">📷 Photo</button>
       <button type="button" class="photo-btn" id="photo-x" hidden aria-label="Retirer la photo">×</button>
@@ -99,6 +116,13 @@ footer{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:
 <dialog id="reglages" aria-labelledby="reg-titre">
   <h2 id="reg-titre">Paramètres</h2>
   <p>Version de l'app : <b id="version"></b></p>
+  <h2>Ordre des rayons</h2>
+  <p>Classez-les dans l'ordre de votre magasin : la liste suit cet ordre.</p>
+  <ul id="reg-rayons"></ul>
+  <div class="ligne-add">
+    <input id="rayon-nouveau" placeholder="Nouveau rayon" enterkeyhint="done" aria-label="Nom du nouveau rayon">
+    <button class="maj" id="rayon-ajouter">Ajouter</button>
+  </div>
   <button class="maj" id="installer">Installer l'app</button>
   <p id="install-etat" role="status" style="margin:8px 0 14px"></p>
   <button class="maj" id="maj">Forcer la mise à jour</button>
@@ -112,6 +136,11 @@ footer{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:
   <button class="maj" id="p-suppr">Supprimer la photo</button>
   <button class="fermer" id="p-fermer">Annuler</button>
 </dialog>
+<dialog id="rayon-dlg" aria-labelledby="rayon-titre">
+  <h2 id="rayon-titre">Rayon</h2>
+  <div id="rayon-choix"></div>
+  <button class="fermer" id="rayon-fermer">Annuler</button>
+</dialog>
 <dialog id="zoom" aria-label="Photo agrandie"><img id="zoom-img" alt=""></dialog>
 <footer>
   <div id="panneau" hidden><ul id="catalogue"></ul></div>
@@ -122,15 +151,17 @@ footer{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:
   </div>
 </footer>
 <script>
-const VERSION='1.4.5';
+const VERSION='1.5.0';
 let invite=null,surInvite=null;
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();invite=e;if(surInvite)surInvite()});
 addEventListener('appinstalled',()=>{invite=null;majInstall()});
-const KEY='courses-v1', CK='courses-catalogue-v1';
+const KEY='courses-v1', CK='courses-catalogue-v1', RK='courses-rayons-v1';
+const DEFAUT=['Fruits et légumes','Boulangerie','Boucherie / Poissonnerie','Produits frais','Surgelés','Épicerie','Boissons','Hygiène / Entretien','Autre'];
 const $=id=>document.getElementById(id);
 const load=k=>{try{return JSON.parse(localStorage.getItem(k))||[]}catch(e){return[]}};
 let items=load(KEY), cat=load(CK);
-const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(items));localStorage.setItem(CK,JSON.stringify(cat))}catch(e){}};
+let rayons=(()=>{try{const v=JSON.parse(localStorage.getItem(RK));if(Array.isArray(v))return v}catch(e){}return DEFAUT.slice()})();
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(items));localStorage.setItem(CK,JSON.stringify(cat));localStorage.setItem(RK,JSON.stringify(rayons))}catch(e){}};
 const eur=n=>n.toLocaleString('fr-FR',{style:'currency',currency:'EUR'});
 const norm=s=>s.trim().toLowerCase();
 let photoEnCours=null,cible=null;
@@ -139,12 +170,36 @@ const toNum=v=>{const n=parseFloat(String(v).replace(',','.'));return isNaN(n)?n
 function esc(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 
 // Mémorise le produit et son dernier prix connu
-function remember(nom,prix,photo){
+// rayon : undefined = inchangé, '' = aucun rayon
+function remember(nom,prix,photo,rayon){
   const c=find(nom);
-  if(c){if(prix!=null)c.prix=prix;if(photo)c.photo=photo}
-  else if(prix!=null||photo)cat.push({nom:nom.trim(),prix:prix??null,photo:photo||null});
+  if(c){if(prix!=null)c.prix=prix;if(photo)c.photo=photo;if(rayon!==undefined)c.rayon=rayon||null}
+  else if(prix!=null||photo||rayon)cat.push({nom:nom.trim(),prix:prix??null,photo:photo||null,rayon:rayon||null});
 }
 items.forEach(i=>remember(i.nom,i.prix)); // reprend les anciennes listes
+
+// Rayon d'un produit ('' si aucun ou si le rayon n'existe plus)
+const rayonDe=nom=>{const c=find(nom);return c&&c.rayon&&rayons.includes(c.rayon)?c.rayon:''};
+const tagRayon=nom=>{const r=rayonDe(nom);return `<button class="rayon-tag ${r?'':'vide'}" aria-label="Rayon de ${esc(nom)} : ${r?esc(r):'aucun'}. Modifier">${r?esc(r):'+ rayon'}</button>`};
+function setRayon(nom,r){const it=items.find(i=>norm(i.nom)===norm(nom));remember(nom,it?it.prix:undefined,null,r)}
+let rayonNom=null;
+function ouvrirRayon(nom){
+  rayonNom=nom;
+  const cur=rayonDe(nom), box=$('rayon-choix'); box.innerHTML='';
+  $('rayon-titre').textContent=nom;
+  [''].concat(rayons).forEach(r=>{
+    const b=document.createElement('button'); b.className='maj';
+    b.textContent=(r===cur?'✓ ':'')+(r||'Sans rayon');
+    b.onclick=()=>{setRayon(rayonNom,r);$('rayon-dlg').close();save();render()};
+    box.appendChild(b);
+  });
+  $('rayon-dlg').showModal();
+}
+function fillSelect(){
+  const s=$('rayon'), v=s.value; s.innerHTML='';
+  [''].concat(rayons).forEach(r=>{const o=document.createElement('option');o.value=r;o.textContent=r||'Rayon (facultatif)';s.appendChild(o)});
+  s.value=rayons.includes(v)?v:'';
+}
 
 function addItem(nom,prix,qte){
   const ex=items.find(i=>norm(i.nom)===norm(nom));
@@ -155,29 +210,86 @@ function addItem(nom,prix,qte){
 function render(){
   const ul=$('liste'); ul.innerHTML='';
   if(!items.length)ul.innerHTML='<p class="vide-msg">La liste est vide. Ajoutez un article ci-dessus ou choisissez-en dans « Mes produits enregistrés ».</p>';
-  items.forEach((it,i)=>{
-    const li=document.createElement('li'); if(it.done)li.className='done';
-    const total=(it.prix||0)*it.qte;
-    const cc=find(it.nom), img=cc&&cc.photo?`<img src="${cc.photo}" alt="">`:'';
-    li.innerHTML=`<input type="checkbox" ${it.done?'checked':''} aria-label="Cocher ${esc(it.nom)}">
-      <div class="nom">${img}<span>${esc(it.nom)}<small>${it.qte>1?'× '+it.qte+(it.prix!=null?' · '+eur(it.prix)+' pièce':''):''}</small></span></div>
-      <button class="prix ${it.prix==null?'vide':''}" aria-label="Modifier le prix">${it.prix==null?'+ prix':eur(total)}</button>
-      <button class="sup" aria-label="Retirer ${esc(it.nom)} de la liste">×</button>`;
-    li.children[0].onchange=e=>{it.done=e.target.checked;save();render()};
-    const im=li.querySelector('.nom img'); if(im)im.onclick=()=>agrandir(cc.photo,it.nom);
-    li.children[2].onclick=()=>{
-      const v=prompt('Nouveau prix unitaire de « '+it.nom+' » (€)',it.prix??'');
-      if(v===null)return;
-      it.prix=toNum(v); remember(it.nom,it.prix); save(); render();
-    };
-    li.children[3].onclick=()=>{items.splice(i,1);save();render()};
-    ul.appendChild(li);
+  // Regroupe par rayon dans l'ordre du magasin ; « Sans rayon » en dernier
+  const groupes=rayons.map(n=>({nom:n,l:[]})); groupes.push({nom:'',l:[]});
+  items.forEach(it=>{const r=rayonDe(it.nom);(groupes.find(g=>g.nom===r)||groupes[groupes.length-1]).l.push(it)});
+  groupes.forEach(g=>{
+    if(!g.l.length)return;
+    g.l.sort((a,b)=>Number(!!a.done)-Number(!!b.done)); // cochés en bas du rayon
+    const t=document.createElement('li'); t.className='titre';
+    t.innerHTML=`<h3>${esc(g.nom||'Sans rayon')} · ${g.l.length}</h3>`;
+    ul.appendChild(t);
+    g.l.forEach(it=>{
+      const li=document.createElement('li'); if(it.done)li.className='done';
+      const total=(it.prix||0)*it.qte;
+      const cc=find(it.nom), img=cc&&cc.photo?`<img src="${cc.photo}" alt="">`:'';
+      li.innerHTML=`<input type="checkbox" ${it.done?'checked':''} aria-label="Cocher ${esc(it.nom)}">
+        <div class="nom">${img}<span>${esc(it.nom)}<small>${it.qte>1?'× '+it.qte+(it.prix!=null?' · '+eur(it.prix)+' pièce':''):''}</small>${tagRayon(it.nom)}</span></div>
+        <button class="prix ${it.prix==null?'vide':''}" aria-label="Modifier le prix">${it.prix==null?'+ prix':eur(total)}</button>
+        <button class="sup" aria-label="Retirer ${esc(it.nom)} de la liste">×</button>`;
+      li.children[0].onchange=e=>{it.done=e.target.checked;save();render()};
+      const im=li.querySelector('.nom img'); if(im)im.onclick=()=>agrandir(cc.photo,it.nom);
+      li.querySelector('.rayon-tag').onclick=()=>ouvrirRayon(it.nom);
+      li.children[2].onclick=()=>{
+        const v=prompt('Nouveau prix unitaire de « '+it.nom+' » (€)',it.prix??'');
+        if(v===null)return;
+        it.prix=toNum(v); remember(it.nom,it.prix); save(); render();
+      };
+      li.children[3].onclick=()=>{items.splice(items.indexOf(it),1);save();render()};
+      ul.appendChild(li);
+    });
   });
   const sum=l=>l.reduce((s,x)=>s+(x.prix||0)*x.qte,0);
   $('total').textContent=eur(sum(items));
   $('pris').textContent='Dans le panier : '+eur(sum(items.filter(x=>x.done)));
-  renderCat();
+  fillSelect();renderRayons();renderCat();
 }
+
+// Paramètres : ordre des rayons
+function renderRayons(){
+  const ul=$('reg-rayons'); ul.innerHTML='';
+  if(!rayons.length)ul.innerHTML='<p class="vide-msg" style="padding:8px 0">Aucun rayon. Ajoutez-en un ci-dessous.</p>';
+  rayons.forEach((n,i)=>{
+    const li=document.createElement('li');
+    li.innerHTML=`<span class="rn">${esc(n)}</span>
+      <button class="btn-mini" aria-label="Monter ${esc(n)}" ${i===0?'disabled':''}>▲</button>
+      <button class="btn-mini" aria-label="Descendre ${esc(n)}" ${i===rayons.length-1?'disabled':''}>▼</button>
+      <button class="btn-mini" aria-label="Renommer ${esc(n)}">✎</button>
+      <button class="sup" aria-label="Supprimer le rayon ${esc(n)}">×</button>`;
+    const b=li.querySelectorAll('button');
+    b[0].onclick=()=>deplacer(i,-1);
+    b[1].onclick=()=>deplacer(i,1);
+    b[2].onclick=()=>renommer(i);
+    b[3].onclick=()=>supprimer(i);
+    ul.appendChild(li);
+  });
+}
+function deplacer(i,d){
+  const j=i+d; if(j<0||j>=rayons.length)return;
+  [rayons[i],rayons[j]]=[rayons[j],rayons[i]]; save(); render();
+}
+function renommer(i){
+  const v=prompt('Nouveau nom du rayon',rayons[i]); if(v===null)return;
+  const n=v.trim(), old=rayons[i];
+  if(!n||(norm(n)!==norm(old)&&rayons.some(r=>norm(r)===norm(n))))return;
+  cat.forEach(c=>{if(c.rayon===old)c.rayon=n});
+  rayons[i]=n; save(); render();
+}
+function supprimer(i){
+  const old=rayons[i];
+  if(!confirm('Supprimer le rayon « '+old+' » ? Ses produits passeront en « Sans rayon ».'))return;
+  cat.forEach(c=>{if(c.rayon===old)c.rayon=null});
+  rayons.splice(i,1); save(); render();
+}
+function ajouterRayon(){
+  const inp=$('rayon-nouveau'), n=inp.value.trim(); if(!n)return;
+  if(!rayons.some(r=>norm(r)===norm(n))){rayons.push(n);save();render()}
+  inp.value='';
+}
+$('rayon-ajouter').onclick=ajouterRayon;
+$('rayon-nouveau').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();ajouterRayon()}});
+$('rayon-fermer').onclick=()=>$('rayon-dlg').close();
+$('rayon-dlg').addEventListener('click',e=>{if(e.target===$('rayon-dlg'))$('rayon-dlg').close()});
 
 function renderCat(){
   cat.sort((a,b)=>a.nom.localeCompare(b.nom,'fr'));
@@ -190,7 +302,7 @@ function renderCat(){
     const li=document.createElement('li');
     const ex=items.find(i=>norm(i.nom)===norm(c.nom));
     const vig=c.photo?`<img src="${c.photo}" alt="">`:'📷';
-    li.innerHTML=`<div class="nom"><button class="vignette" aria-label="Photo de ${esc(c.nom)}">${vig}</button><span>${esc(c.nom)}<small>${ex?'Dans la liste : × '+ex.qte:''}</small></span></div>
+    li.innerHTML=`<div class="nom"><button class="vignette" aria-label="Photo de ${esc(c.nom)}">${vig}</button><span>${esc(c.nom)}<small>${ex?'Dans la liste : × '+ex.qte:''}</small>${tagRayon(c.nom)}</span></div>
       <button class="prix ${c.prix==null?'vide':''}" aria-label="Modifier le prix de ${esc(c.nom)}">${c.prix==null?'+ prix':eur(c.prix)}</button>
       <button class="moins" aria-label="Retirer un ${esc(c.nom)}" ${ex&&ex.qte>1?'':'disabled'}>−</button>
       <button class="ajout" aria-label="Ajouter ${esc(c.nom)} à la liste">+</button>
@@ -203,6 +315,7 @@ function renderCat(){
     li.children[2].onclick=()=>{if(ex&&ex.qte>1){ex.qte--;save();render()}};
     li.children[3].onclick=()=>{addItem(c.nom,c.prix,1);save();render()};
     li.children[4].onclick=()=>{if(confirm('Supprimer « '+c.nom+' » des produits enregistrés ?')){cat=cat.filter(x=>x!==c);save();render()}};
+    li.querySelector('.rayon-tag').onclick=()=>ouvrirRayon(c.nom);
     li.querySelector('.vignette').onclick=()=>{
       cible=c;
       if(c.photo){$('photo-titre').textContent=c.nom;$('photo-grand').src=c.photo;$('photo-grand').alt=c.nom;$('photo-dlg').showModal()}else $('fichier').click();
@@ -215,6 +328,7 @@ function renderCat(){
 $('nom').addEventListener('input',()=>{
   const c=find($('nom').value);
   $('prix').placeholder=c&&c.prix!=null?eur(c.prix)+' (enregistré)':'Prix €';
+  if(c)$('rayon').value=rayonDe(c.nom); // produit connu : reprend son rayon
 });
 
 $('f').onsubmit=e=>{
@@ -222,10 +336,10 @@ $('f').onsubmit=e=>{
   const nom=$('nom').value.trim(), c=find(nom);
   let p=toNum($('prix').value);
   if(p===null&&c)p=c.prix;        // prix vide : reprend le prix enregistré
-  remember(nom,p,photoEnCours);   // prix différent : mise à jour
+  remember(nom,p,photoEnCours,$('rayon').value);   // prix ou rayon différent : mise à jour
   addItem(nom,p,Math.max(1,parseInt($('qte').value)||1));
   save();render();
-  $('nom').value='';$('prix').value='';$('qte').value=1;$('prix').placeholder='Prix €';$('nom').focus();
+  $('nom').value='';$('prix').value='';$('qte').value=1;$('rayon').value='';$('prix').placeholder='Prix €';$('nom').focus();
   photoEnCours=null;majPhoto();
 };
 $('clear').onclick=()=>{
