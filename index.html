@@ -81,7 +81,7 @@ footer{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:
       <button type="button" class="photo-btn" id="photo-x" hidden aria-label="Retirer la photo">×</button>
       <button class="ajouter">Ajouter à la liste</button>
     </div>
-    <input type="file" id="fichier" accept="image/*" hidden>
+    <input type="file" id="fichier" accept="image/*" capture="environment" hidden>
   </form>
   <ul id="liste"></ul>
 
@@ -111,7 +111,7 @@ footer{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:
   </div>
 </footer>
 <script>
-const VERSION='1.4.0';
+const VERSION='1.4.1';
 let invite=null,surInvite=null;
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();invite=e;if(surInvite)surInvite()});
 addEventListener('appinstalled',()=>{invite=null;majInstall()});
