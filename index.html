@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ma liste de courses</title>
 <meta name="theme-color" content="#2F6B4F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Courses">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -12,6 +16,7 @@
 :root{--bg:#EEF1EC;--card:#fff;--ink:#16261F;--mute:#66756D;--line:#D9E0DA;--accent:#2F6B4F;--tag:#E8B931;--danger:#B3412F}
 @media(prefers-color-scheme:dark){:root{--bg:#121A16;--card:#1B2620;--ink:#E8EFEA;--mute:#93A39A;--line:#2C3A32;--accent:#5DB58A;--tag:#E8B931;--danger:#E07A66}}
 *{box-sizing:border-box}
+html{background:var(--bg);min-height:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;padding:env(safe-area-inset-top) 0 calc(env(safe-area-inset-bottom) + 150px)}
 main{max-width:560px;margin:0 auto;padding:20px 16px}
 .entete{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
@@ -118,7 +123,7 @@ footer{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:
   </div>
 </footer>
 <script>
-const VERSION='1.4.3';
+const VERSION='1.4.4';
 let invite=null,surInvite=null;
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();invite=e;if(surInvite)surInvite()});
 addEventListener('appinstalled',()=>{invite=null;majInstall()});
