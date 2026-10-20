@@ -171,7 +171,7 @@ body.mode-magasin #quitter-magasin{display:block;position:fixed;bottom:24px;left
   </div>
 </footer>
 <script>
-const VERSION='1.6.0';
+const VERSION='1.6.1';
 let invite=null,surInvite=null;
 let editionOrdreActive=false;
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();invite=e;if(surInvite)surInvite()});
@@ -239,6 +239,11 @@ function ouvrirRayon(nom){
   });
   $('rayon-dlg').showModal();
 }
+$('rayon-fermer').onclick=()=>$('rayon-dlg').close();$('rayon-dlg').addEventListener('click',e=>{
+  const r=e.currentTarget.getBoundingClientRect();
+  if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)e.currentTarget.close();
+});
+
 function fillSelect(){
   const s=$('rayon'), v=s.value; s.innerHTML='';
   [''].concat(rayons).forEach(r=>{const o=document.createElement('option');o.value=r;o.textContent=r||'Rayon (facultatif)';s.appendChild(o)});
