@@ -79,16 +79,18 @@ li.titre h3{margin:0;font-size:13px;text-transform:uppercase;letter-spacing:.06e
 .rayon-tag.vide{border-style:dashed;color:var(--mute)}
 #rayon-dlg .maj{display:block;width:100%;margin-bottom:8px;text-align:left}
 #reg-rayons{margin:8px 0 10px}
-#reg-rayons li{grid-template-columns:34px 1fr 34px 28px;gap:4px;padding:6px 8px;margin-bottom:6px;border-left:none}
+#reg-rayons li{grid-template-columns:34px 1fr 32px 34px 28px;gap:4px;padding:6px 8px;margin-bottom:6px;border-left:none}
 #reg-rayons .rn{min-width:0;overflow-wrap:anywhere;display:flex;align-items:center;gap:8px}
 #reg-rayons li.glisse{position:relative;z-index:2;box-shadow:0 6px 18px rgba(0,0,0,.3);border-color:var(--accent)}
 .poignee{background:none;border:0;color:var(--mute);font-size:22px;line-height:1;height:32px;width:34px;padding:0;cursor:default;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;opacity:0.3}
 .edition-active .poignee{cursor:grab;opacity:1}
 .glisse .poignee{cursor:grabbing;color:var(--accent)}
 .btn-mini{background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;width:34px;height:32px;font-size:14px;cursor:pointer;padding:0}
+.input-couleur{-webkit-appearance:none;appearance:none;border:none;width:28px;height:28px;border-radius:6px;cursor:pointer;background:none;padding:0}
+.input-couleur::-webkit-color-swatch-wrapper{padding:0}
+.input-couleur::-webkit-color-swatch{border:1px solid var(--line);border-radius:6px}
 .ligne-add{display:flex;gap:8px;margin-bottom:18px}
 .ligne-add input{flex:1}
-.pastille-couleur{width:12px;height:12px;border-radius:50%;display:inline-block;flex:none}
 
 /* Mode Magasin / Plein écran */
 #quitter-magasin{display:none}
@@ -134,7 +136,7 @@ body.mode-magasin #quitter-magasin{display:block;position:fixed;bottom:24px;left
   <h2 id="reg-titre">Paramètres</h2>
   <p>Version de l'app : <b id="version"></b></p>
   <h2>Ordre des rayons</h2>
-  <p>Classez-les dans l'ordre de votre magasin : la liste suit cet ordre.</p>
+  <p>Classez-les dans l'ordre de votre magasin et personnalisez leurs couleurs.</p>
   <ul id="reg-rayons"></ul>
   <div id="zone-centre-ordre" style="margin:16px 0;text-align:center"></div>
   <div class="ligne-add">
@@ -169,31 +171,39 @@ body.mode-magasin #quitter-magasin{display:block;position:fixed;bottom:24px;left
   </div>
 </footer>
 <script>
-const VERSION='1.5.9';
+const VERSION='1.6.0';
 let invite=null,surInvite=null;
 let editionOrdreActive=false;
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();invite=e;if(surInvite)surInvite()});
 addEventListener('appinstalled',()=>{invite=null;majInstall()});
-const KEY='courses-v1', CK='courses-catalogue-v1', RK='courses-rayons-v1';
+const KEY='courses-v1', CK='courses-catalogue-v1', RK='courses-rayons-v1', RCK='courses-rayons-couleurs-v1';
 const DEFAUT=['Fruits et légumes','Boulangerie','Boucherie / Poissonnerie','Produits frais','Surgelés','Épicerie','Boissons','Hygiène / Entretien','Autre'];
-
-// Couleurs prédéfinies pour chaque rayon
-const PALETTE=['#2E7D32','#E65100','#C62828','#0277BD','#00838F','#6A1B9A','#AD1457','#4E342E','#37474F','#00695C','#8D6E63','#558B2F'];
-function couleurRayon(nom){
-  if(!nom) return 'var(--line)';
-  let idx = rayons.indexOf(nom);
-  if(idx === -1){
-    let h=0; for(let i=0;i<nom.length;i++) h=nom.charCodeAt(i)+((h<<5)-h);
-    idx = Math.abs(h);
-  }
-  return PALETTE[idx % PALETTE.length];
-}
+const PALETTE_DEFAUT=['#2E7D32','#E65100','#C62828','#0277BD','#00838F','#6A1B9A','#AD1457','#4E342E','#37474F','#00695C','#8D6E63','#558B2F'];
 
 const $=id=>document.getElementById(id);
 const load=k=>{try{return JSON.parse(localStorage.getItem(k))||[]}catch(e){return[]}};
 let items=load(KEY), cat=load(CK);
 let rayons=(()=>{try{const v=JSON.parse(localStorage.getItem(RK));if(Array.isArray(v))return v}catch(e){}return DEFAUT.slice()})();
-const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(items));localStorage.setItem(CK,JSON.stringify(cat));localStorage.setItem(RK,JSON.stringify(rayons))}catch(e){}};
+let couleursRayons=(()=>{try{const v=JSON.parse(localStorage.getItem(RCK));if(v&&typeof v==='object')return v}catch(e){}return{}})();
+
+const couleurRayon=nom=>{
+  if(!nom) return 'var(--line)';
+  if(couleursRayons[nom]) return couleursRayons[nom];
+  let idx = rayons.indexOf(nom);
+  if(idx === -1){
+    let h=0; for(let i=0;i<nom.length;i++) h=nom.charCodeAt(i)+((h<<5)-h);
+    idx = Math.abs(h);
+  }
+  return PALETTE_DEFAUT[idx % PALETTE_DEFAUT.length];
+};
+
+const save=()=>{try{
+  localStorage.setItem(KEY,JSON.stringify(items));
+  localStorage.setItem(CK,JSON.stringify(cat));
+  localStorage.setItem(RK,JSON.stringify(rayons));
+  localStorage.setItem(RCK,JSON.stringify(couleursRayons));
+}catch(e){}};
+
 const eur=n=>n.toLocaleString('fr-FR',{style:'currency',currency:'EUR'});
 const norm=s=>s.trim().toLowerCase();
 let photoEnCours=null,cible=null;
@@ -223,7 +233,7 @@ function ouvrirRayon(nom){
   [''].concat(rayons).forEach(r=>{
     const b=document.createElement('button'); b.className='maj';
     const c=couleurRayon(r);
-    b.innerHTML=(r===cur?'✓ ':'')+`<span class="pastille-couleur" style="background:${c}"></span> `+(r||'Sans rayon');
+    b.innerHTML=(r===cur?'✓ ':'')+`<span class="input-couleur" style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${c};vertical-align:middle;margin-right:6px"></span> `+(r||'Sans rayon');
     b.onclick=()=>{setRayon(rayonNom,r);$('rayon-dlg').close();save();render()};
     box.appendChild(b);
   });
@@ -251,7 +261,7 @@ function render(){
     g.l.sort((a,b)=>Number(!!a.done)-Number(!!b.done));
     const t=document.createElement('li'); t.className='titre';
     const coul=couleurRayon(g.nom);
-    t.innerHTML=`<h3><span class="pastille-couleur" style="background:${coul}"></span>${esc(g.nom||'Sans rayon')} · ${g.l.length}</h3>`;
+    t.innerHTML=`<h3><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${coul}"></span>${esc(g.nom||'Sans rayon')} · ${g.l.length}</h3>`;
     ul.appendChild(t);
     g.l.forEach(it=>{
       const li=document.createElement('li'); if(it.done)li.className='done';
@@ -302,10 +312,17 @@ function renderRayons(){
     li.dataset.nom=n;
     const coul=couleurRayon(n);
     li.innerHTML=`<button class="poignee" aria-label="Déplacer ${esc(n)} : maintenir et glisser">⠿</button>
-      <span class="rn"><span class="pastille-couleur" style="background:${coul}"></span>${esc(n)}</span>
+      <span class="rn"><input type="color" class="input-couleur" value="${coul}" aria-label="Couleur de ${esc(n)}">${esc(n)}</span>
       <button class="btn-mini" aria-label="Renommer ${esc(n)}">✎</button>
       <button class="sup" aria-label="Supprimer le rayon ${esc(n)}">×</button>`;
     const b=li.querySelectorAll('button');
+    const inpColor=li.querySelector('input[type="color"]');
+    inpColor.oninput=e=>{
+      couleursRayons[n]=e.target.value;
+      save();
+    };
+    inpColor.onchange=()=>render();
+    
     b[0].addEventListener('pointerdown',e=>{
       if(!editionOrdreActive) return;
       glisser(e,li);
@@ -361,12 +378,14 @@ function renommer(i){
   const n=v.trim(), old=rayons[i];
   if(!n||(norm(n)!==norm(old)&&rayons.some(r=>norm(r)===norm(n))))return;
   cat.forEach(c=>{if(c.rayon===old)c.rayon=n});
+  if(couleursRayons[old]){couleursRayons[n]=couleursRayons[old];delete couleursRayons[old]}
   rayons[i]=n; save(); render();
 }
 function supprimer(i){
   const old=rayons[i];
   if(!confirm('Supprimer le rayon « '+old+' » ? Ses produits passeront en « Sans rayon ».'))return;
   cat.forEach(c=>{if(c.rayon===old)c.rayon=null});
+  delete couleursRayons[old];
   rayons.splice(i,1); save(); render();
 }
 function ajouterRayon(){
