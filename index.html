@@ -45,7 +45,7 @@ li.done .nom img{opacity:.5}
 #zoom::backdrop{background:rgba(0,0,0,.75)}
 #zoom img{display:block;max-width:92vw;max-height:80vh;border-radius:14px;cursor:zoom-out}
 ul{list-style:none;margin:16px 0 0;padding:0}
-li{display:grid;grid-template-columns:28px 1fr auto 32px;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px}
+li{display:grid;grid-template-columns:28px 1fr auto 32px;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px;border-left:4px solid transparent}
 li.done .nom{text-decoration:line-through;color:var(--mute)}
 li input[type=checkbox]{width:22px;height:22px;accent-color:var(--accent);padding:0}
 .nom small{display:block;color:var(--mute);font-size:13px}
@@ -74,13 +74,13 @@ footer{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:
 #rayon{grid-column:1/-1}
 li.titre{display:block;background:none;border:0;padding:0;margin:18px 0 6px}
 li.titre:first-child{margin-top:0}
-li.titre h3{margin:0;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute)}
+li.titre h3{margin:0;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute);display:flex;align-items:center;gap:8px}
 .rayon-tag{display:inline-block;margin-top:4px;font:600 12px system-ui;color:var(--accent);background:none;border:1px solid var(--line);border-radius:999px;padding:2px 9px;cursor:pointer}
 .rayon-tag.vide{border-style:dashed;color:var(--mute)}
 #rayon-dlg .maj{display:block;width:100%;margin-bottom:8px;text-align:left}
 #reg-rayons{margin:8px 0 10px}
-#reg-rayons li{grid-template-columns:34px 1fr 34px 28px;gap:4px;padding:6px 8px;margin-bottom:6px}
-#reg-rayons .rn{min-width:0;overflow-wrap:anywhere}
+#reg-rayons li{grid-template-columns:34px 1fr 34px 28px;gap:4px;padding:6px 8px;margin-bottom:6px;border-left:none}
+#reg-rayons .rn{min-width:0;overflow-wrap:anywhere;display:flex;align-items:center;gap:8px}
 #reg-rayons li.glisse{position:relative;z-index:2;box-shadow:0 6px 18px rgba(0,0,0,.3);border-color:var(--accent)}
 .poignee{background:none;border:0;color:var(--mute);font-size:22px;line-height:1;height:32px;width:34px;padding:0;cursor:default;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;opacity:0.3}
 .edition-active .poignee{cursor:grab;opacity:1}
@@ -88,6 +88,7 @@ li.titre h3{margin:0;font-size:13px;text-transform:uppercase;letter-spacing:.06e
 .btn-mini{background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;width:34px;height:32px;font-size:14px;cursor:pointer;padding:0}
 .ligne-add{display:flex;gap:8px;margin-bottom:18px}
 .ligne-add input{flex:1}
+.pastille-couleur{width:12px;height:12px;border-radius:50%;display:inline-block;flex:none}
 
 /* Mode Magasin / Plein écran */
 #quitter-magasin{display:none}
@@ -168,13 +169,26 @@ body.mode-magasin #quitter-magasin{display:block;position:fixed;bottom:24px;left
   </div>
 </footer>
 <script>
-const VERSION='1.5.8';
+const VERSION='1.5.9';
 let invite=null,surInvite=null;
 let editionOrdreActive=false;
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();invite=e;if(surInvite)surInvite()});
 addEventListener('appinstalled',()=>{invite=null;majInstall()});
 const KEY='courses-v1', CK='courses-catalogue-v1', RK='courses-rayons-v1';
 const DEFAUT=['Fruits et légumes','Boulangerie','Boucherie / Poissonnerie','Produits frais','Surgelés','Épicerie','Boissons','Hygiène / Entretien','Autre'];
+
+// Couleurs prédéfinies pour chaque rayon
+const PALETTE=['#2E7D32','#E65100','#C62828','#0277BD','#00838F','#6A1B9A','#AD1457','#4E342E','#37474F','#00695C','#8D6E63','#558B2F'];
+function couleurRayon(nom){
+  if(!nom) return 'var(--line)';
+  let idx = rayons.indexOf(nom);
+  if(idx === -1){
+    let h=0; for(let i=0;i<nom.length;i++) h=nom.charCodeAt(i)+((h<<5)-h);
+    idx = Math.abs(h);
+  }
+  return PALETTE[idx % PALETTE.length];
+}
+
 const $=id=>document.getElementById(id);
 const load=k=>{try{return JSON.parse(localStorage.getItem(k))||[]}catch(e){return[]}};
 let items=load(KEY), cat=load(CK);
@@ -195,7 +209,12 @@ function remember(nom,prix,photo,rayon,unite){
 items.forEach(i=>remember(i.nom,i.prix,undefined,undefined,i.unite));
 
 const rayonDe=nom=>{const c=find(nom);return c&&c.rayon&&rayons.includes(c.rayon)?c.rayon:''};
-const tagRayon=nom=>{const r=rayonDe(nom);return `<button class="rayon-tag ${r?'':'vide'}" aria-label="Rayon de ${esc(nom)} : ${r?esc(r):'aucun'}. Modifier">${r?esc(r):'+ rayon'}</button>`};
+const tagRayon=nom=>{
+  const r=rayonDe(nom);
+  const coul=couleurRayon(r);
+  const style = r ? `style="color:${coul};border-color:${coul}"` : '';
+  return `<button class="rayon-tag ${r?'':'vide'}" ${style} aria-label="Rayon de ${esc(nom)} : ${r?esc(r):'aucun'}. Modifier">${r?esc(r):'+ rayon'}</button>`;
+};
 function setRayon(nom,r){const it=items.find(i=>norm(i.nom)===norm(nom));remember(nom,it?it.prix:undefined,null,r,it?it.unite:undefined)}
 let rayonNom=null;
 function ouvrirRayon(nom){
@@ -203,7 +222,8 @@ function ouvrirRayon(nom){
   const cur=rayonDe(nom), box=$('rayon-choix'); box.innerHTML='';$('rayon-titre').textContent=nom;
   [''].concat(rayons).forEach(r=>{
     const b=document.createElement('button'); b.className='maj';
-    b.textContent=(r===cur?'✓ ':'')+(r||'Sans rayon');
+    const c=couleurRayon(r);
+    b.innerHTML=(r===cur?'✓ ':'')+`<span class="pastille-couleur" style="background:${c}"></span> `+(r||'Sans rayon');
     b.onclick=()=>{setRayon(rayonNom,r);$('rayon-dlg').close();save();render()};
     box.appendChild(b);
   });
@@ -230,10 +250,12 @@ function render(){
     if(!g.l.length)return;
     g.l.sort((a,b)=>Number(!!a.done)-Number(!!b.done));
     const t=document.createElement('li'); t.className='titre';
-    t.innerHTML=`<h3>${esc(g.nom||'Sans rayon')} · ${g.l.length}</h3>`;
+    const coul=couleurRayon(g.nom);
+    t.innerHTML=`<h3><span class="pastille-couleur" style="background:${coul}"></span>${esc(g.nom||'Sans rayon')} · ${g.l.length}</h3>`;
     ul.appendChild(t);
     g.l.forEach(it=>{
       const li=document.createElement('li'); if(it.done)li.className='done';
+      if(g.nom) li.style.borderLeftColor = coul;
       const total=(it.prix||0)*it.qte;
       const cc=find(it.nom), img=cc&&cc.photo?`<img src="${cc.photo}" alt="">`:'';
       const detailQte=it.qte>1 || it.unite ? `× ${it.qte}${it.unite?' '+esc(it.unite):''}${it.prix!=null?' · '+eur(it.prix)+' pièce':''}` : '';
@@ -278,8 +300,9 @@ function renderRayons(){
   rayons.forEach((n,i)=>{
     const li=document.createElement('li');
     li.dataset.nom=n;
+    const coul=couleurRayon(n);
     li.innerHTML=`<button class="poignee" aria-label="Déplacer ${esc(n)} : maintenir et glisser">⠿</button>
-      <span class="rn">${esc(n)}</span>
+      <span class="rn"><span class="pastille-couleur" style="background:${coul}"></span>${esc(n)}</span>
       <button class="btn-mini" aria-label="Renommer ${esc(n)}">✎</button>
       <button class="sup" aria-label="Supprimer le rayon ${esc(n)}">×</button>`;
     const b=li.querySelectorAll('button');
