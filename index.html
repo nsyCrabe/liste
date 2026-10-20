@@ -6,8 +6,8 @@
 <title>Ma liste de courses</title>
 <meta name="theme-color" content="#2F6B4F">
 <link rel="manifest" href="manifest.json">
-<link rel="icon" href="icons/icon-192.png">
-<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
 <style>
 :root{--bg:#EEF1EC;--card:#fff;--ink:#16261F;--mute:#66756D;--line:#D9E0DA;--accent:#2F6B4F;--tag:#E8B931;--danger:#B3412F}
 @media(prefers-color-scheme:dark){:root{--bg:#121A16;--card:#1B2620;--ink:#E8EFEA;--mute:#93A39A;--line:#2C3A32;--accent:#5DB58A;--tag:#E8B931;--danger:#E07A66}}
@@ -87,7 +87,7 @@ footer{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:
   </div>
 </footer>
 <script>
-const VERSION='1.3.4';
+const VERSION='1.3.5';
 let invite=null,surInvite=null;
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();invite=e;if(surInvite)surInvite()});
 addEventListener('appinstalled',()=>{invite=null;majInstall()});
