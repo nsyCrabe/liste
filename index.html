@@ -82,7 +82,8 @@ li.titre h3{margin:0;font-size:13px;text-transform:uppercase;letter-spacing:.06e
 #reg-rayons li{grid-template-columns:34px 1fr 34px 28px;gap:4px;padding:6px 8px;margin-bottom:6px}
 #reg-rayons .rn{min-width:0;overflow-wrap:anywhere}
 #reg-rayons li.glisse{position:relative;z-index:2;box-shadow:0 6px 18px rgba(0,0,0,.3);border-color:var(--accent)}
-.poignee{background:none;border:0;color:var(--mute);font-size:22px;line-height:1;height:32px;width:34px;padding:0;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.poignee{background:none;border:0;color:var(--mute);font-size:22px;line-height:1;height:32px;width:34px;padding:0;cursor:default;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;opacity:0.3}
+.edition-active .poignee{cursor:grab;opacity:1}
 .glisse .poignee{cursor:grabbing;color:var(--accent)}
 .btn-mini{background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;width:34px;height:32px;font-size:14px;cursor:pointer;padding:0}
 .ligne-add{display:flex;gap:8px;margin-bottom:18px}
@@ -107,7 +108,7 @@ body.mode-magasin #quitter-magasin{display:block;position:fixed;bottom:24px;left
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
       </button>
       <button class="gear" id="ouvrir-reg" aria-label="Paramètres">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l-.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
       </button>
     </div>
   </div>
@@ -131,8 +132,11 @@ body.mode-magasin #quitter-magasin{display:block;position:fixed;bottom:24px;left
 <dialog id="reglages" aria-labelledby="reg-titre">
   <h2 id="reg-titre">Paramètres</h2>
   <p>Version de l'app : <b id="version"></b></p>
-  <h2>Ordre des rayons</h2>
-  <p>Classez-les dans l'ordre de votre magasin : la liste suit cet ordre.</p>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;margin-bottom:6px">
+    <h2 style="margin:0">Ordre des rayons</h2>
+    <button class="maj" id="toggle-ordre" style="padding:6px 10px;font-size:13px">Modifier l'ordre</button>
+  </div>
+  <p>Activez le mode modification pour glisser les rayons dans l'ordre de votre magasin.</p>
   <ul id="reg-rayons"></ul>
   <div class="ligne-add">
     <input id="rayon-nouveau" placeholder="Nouveau rayon" enterkeyhint="done" aria-label="Nom du nouveau rayon">
@@ -166,8 +170,9 @@ body.mode-magasin #quitter-magasin{display:block;position:fixed;bottom:24px;left
   </div>
 </footer>
 <script>
-const VERSION='1.5.4';
+const VERSION='1.5.7';
 let invite=null,surInvite=null;
+let editionOrdreActive=false;
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();invite=e;if(surInvite)surInvite()});
 addEventListener('appinstalled',()=>{invite=null;majInstall()});
 const KEY='courses-v1', CK='courses-catalogue-v1', RK='courses-rayons-v1';
@@ -184,7 +189,6 @@ const find=n=>cat.find(c=>norm(c.nom)===norm(n));
 const toNum=v=>{const n=parseFloat(String(v).replace(',','.'));return isNaN(n)?null:Math.max(0,n)};
 function esc(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 
-// Mémorise le produit, son dernier prix et son unité
 function remember(nom,prix,photo,rayon,unite){
   const c=find(nom);
   if(c){if(prix!=null)c.prix=prix;if(photo)c.photo=photo;if(rayon!==undefined)c.rayon=rayon||null;if(unite!==undefined)c.unite=unite||''}
@@ -258,6 +262,9 @@ function render(){
 
 function renderRayons(){
   const ul=$('reg-rayons'); ul.innerHTML='';
+  if(editionOrdreActive) ul.classList.add('edition-active'); else ul.classList.remove('edition-active');
+  $('toggle-ordre').textContent=editionOrdreActive ? 'Terminer' : "Modifier l'ordre";
+  
   if(!rayons.length)ul.innerHTML='<p class="vide-msg" style="padding:8px 0">Aucun rayon. Ajoutez-en un ci-dessous.</p>';
   rayons.forEach((n,i)=>{
     const li=document.createElement('li');
@@ -267,12 +274,20 @@ function renderRayons(){
       <button class="btn-mini" aria-label="Renommer ${esc(n)}">✎</button>
       <button class="sup" aria-label="Supprimer le rayon ${esc(n)}">×</button>`;
     const b=li.querySelectorAll('button');
-    b[0].addEventListener('pointerdown',e=>glisser(e,li));
+    b[0].addEventListener('pointerdown',e=>{
+      if(!editionOrdreActive) return;
+      glisser(e,li);
+    });
     b[1].onclick=()=>renommer(i);
     b[2].onclick=()=>supprimer(i);
     ul.appendChild(li);
   });
 }
+
+$('toggle-ordre').onclick=()=>{
+  editionOrdreActive=!editionOrdreActive;
+  renderRayons();
+};
 
 function glisser(e,li){
   if(e.button>0)return;
@@ -333,7 +348,7 @@ function ajouterRayon(){
   inp.value='';
 }
 $('rayon-ajouter').onclick=ajouterRayon;
-$('rayon-nouveau').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();ajouterRayon()}});$('rayon-fermer').onclick=()=>$('rayon-dlg').close();$('rayon-dlg').addEventListener('click',e=>{if(e.target===$('rayon-dlg'))$('rayon-dlg').close()});
+$('rayon-nouveau').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();ajouterRayon()}});$('rayon-fermer').onclick=()=>{$('reglages').close();editionOrdreActive=false;};$('reglages').addEventListener('click',e=>{if(e.target===$('reglages')){$('reglages').close();editionOrdreActive=false;}});
 
 function renderCat(){
   cat.sort((a,b)=>a.nom.localeCompare(b.nom,'fr'));
@@ -466,8 +481,8 @@ $('installer').onclick=async()=>{
   }
 };
 $('ouvrir-reg').onclick=()=>{majInstall();$('reglages').showModal()};
-$('fermer-reg').onclick=()=>$('reglages').close();
-$('reglages').addEventListener('click',e=>{if(e.target===$('reglages'))$('reglages').close()});$('maj').onclick=async()=>{
+$('fermer-reg').onclick=()=>{$('reglages').close();editionOrdreActive=false;};
+$('reglages').addEventListener('click',e=>{if(e.target===$('reglages')){$('reglages').close();editionOrdreActive=false;}});$('maj').onclick=async()=>{
   const etat=$('maj-etat'); etat.textContent='Mise à jour en cours…';
   try{
     if('serviceWorker' in navigator){
