@@ -22,7 +22,18 @@ h2{font-size:17px;margin:0 0 10px}
 form{display:grid;grid-template-columns:1fr 92px 64px;gap:8px;margin-bottom:8px}
 input{font:inherit;color:inherit;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;min-width:0}
 input:focus,button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
-form button{grid-column:1/-1;font:inherit;font-weight:600;background:var(--accent);color:#fff;border:0;border-radius:10px;padding:12px;cursor:pointer}
+.ligne2{grid-column:1/-1;display:flex;gap:8px}
+.ajouter{flex:1;font:inherit;font-weight:600;background:var(--accent);color:#fff;border:0;border-radius:10px;padding:12px;cursor:pointer}
+.photo-btn{flex:none;display:flex;align-items:center;gap:6px;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:0 12px;font:inherit;cursor:pointer}
+.photo-btn[hidden]{display:none}
+.photo-btn img{width:32px;height:32px;border-radius:6px;object-fit:cover}
+.nom{display:flex;align-items:center;gap:10px;min-width:0}
+.nom span{min-width:0;overflow-wrap:anywhere}
+.nom img,.vignette{width:40px;height:40px;border-radius:8px;object-fit:cover;flex:none}
+.vignette{background:var(--bg);border:1px dashed var(--mute);color:var(--mute);font-size:18px;cursor:pointer;padding:0;display:grid;place-items:center;overflow:hidden}
+.vignette img{width:100%;height:100%;border-radius:0}
+li.done .nom img{opacity:.5}
+#photo-dlg .maj{display:block;width:100%;margin-bottom:8px}
 ul{list-style:none;margin:16px 0 0;padding:0}
 li{display:grid;grid-template-columns:28px 1fr auto 32px;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px}
 li.done .nom{text-decoration:line-through;color:var(--mute)}
@@ -38,7 +49,7 @@ li input[type=checkbox]{width:22px;height:22px;accent-color:var(--accent);paddin
 #panneau li{grid-template-columns:1fr auto 36px 36px 32px;background:var(--bg);gap:8px}
 .cat-btn{width:100%;max-width:560px;margin:0 auto 8px;display:flex;justify-content:space-between;align-items:center;font:600 15px system-ui;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 12px;cursor:pointer}
 .ajout,.moins{background:var(--accent);color:#fff;border:0;border-radius:8px;width:36px;height:32px;font-size:20px;cursor:pointer}
-.moins{background:#C0392B;color:#fff;border:0}
+.moins{background:var(--bg);color:var(--ink);border:1px solid var(--line)}
 .moins:disabled{opacity:.35;cursor:default}
 dialog{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:14px;padding:20px;width:min(92vw,360px)}
 dialog::backdrop{background:rgba(0,0,0,.45)}
@@ -65,7 +76,12 @@ footer{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:
     <datalist id="suggestions"></datalist>
     <input id="prix" type="number" inputmode="decimal" step="0.01" min="0" placeholder="Prix €" aria-label="Prix en euros">
     <input id="qte" type="number" inputmode="numeric" min="1" value="1" aria-label="Quantité">
-    <button>Ajouter à la liste</button>
+    <div class="ligne2">
+      <button type="button" class="photo-btn" id="photo-btn">📷 Photo</button>
+      <button type="button" class="photo-btn" id="photo-x" hidden aria-label="Retirer la photo">×</button>
+      <button class="ajouter">Ajouter à la liste</button>
+    </div>
+    <input type="file" id="fichier" accept="image/*" hidden>
   </form>
   <ul id="liste"></ul>
 
@@ -80,6 +96,12 @@ footer{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:
   <p id="maj-etat" role="status" style="margin:10px 0 0"></p>
   <button class="fermer" id="fermer-reg">Fermer</button>
 </dialog>
+<dialog id="photo-dlg" aria-labelledby="photo-titre">
+  <h2 id="photo-titre">Photo</h2>
+  <button class="maj" id="p-nouvelle">Prendre une nouvelle photo</button>
+  <button class="maj" id="p-suppr">Supprimer la photo</button>
+  <button class="fermer" id="p-fermer">Annuler</button>
+</dialog>
 <footer>
   <div id="panneau" hidden><ul id="catalogue"></ul></div>
   <button class="cat-btn" id="cat-titre" aria-expanded="false" aria-controls="panneau"><span id="cat-txt">Mes produits enregistrés</span><span id="cat-fl" aria-hidden="true">▲</span></button>
@@ -89,7 +111,7 @@ footer{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:
   </div>
 </footer>
 <script>
-const VERSION='1.3.6';
+const VERSION='1.4.0';
 let invite=null,surInvite=null;
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();invite=e;if(surInvite)surInvite()});
 addEventListener('appinstalled',()=>{invite=null;majInstall()});
@@ -100,15 +122,16 @@ let items=load(KEY), cat=load(CK);
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(items));localStorage.setItem(CK,JSON.stringify(cat))}catch(e){}};
 const eur=n=>n.toLocaleString('fr-FR',{style:'currency',currency:'EUR'});
 const norm=s=>s.trim().toLowerCase();
+let photoEnCours=null,cible=null;
 const find=n=>cat.find(c=>norm(c.nom)===norm(n));
 const toNum=v=>{const n=parseFloat(String(v).replace(',','.'));return isNaN(n)?null:Math.max(0,n)};
 function esc(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 
 // Mémorise le produit et son dernier prix connu
-function remember(nom,prix){
-  if(prix==null)return;
+function remember(nom,prix,photo){
   const c=find(nom);
-  if(c)c.prix=prix; else cat.push({nom:nom.trim(),prix});
+  if(c){if(prix!=null)c.prix=prix;if(photo)c.photo=photo}
+  else if(prix!=null||photo)cat.push({nom:nom.trim(),prix:prix??null,photo:photo||null});
 }
 items.forEach(i=>remember(i.nom,i.prix)); // reprend les anciennes listes
 
@@ -124,8 +147,9 @@ function render(){
   items.forEach((it,i)=>{
     const li=document.createElement('li'); if(it.done)li.className='done';
     const total=(it.prix||0)*it.qte;
+    const cc=find(it.nom), img=cc&&cc.photo?`<img src="${cc.photo}" alt="">`:'';
     li.innerHTML=`<input type="checkbox" ${it.done?'checked':''} aria-label="Cocher ${esc(it.nom)}">
-      <div class="nom">${esc(it.nom)}<small>${it.qte>1?'× '+it.qte+(it.prix!=null?' · '+eur(it.prix)+' pièce':''):''}</small></div>
+      <div class="nom">${img}<span>${esc(it.nom)}<small>${it.qte>1?'× '+it.qte+(it.prix!=null?' · '+eur(it.prix)+' pièce':''):''}</small></span></div>
       <button class="prix ${it.prix==null?'vide':''}" aria-label="Modifier le prix">${it.prix==null?'+ prix':eur(total)}</button>
       <button class="sup" aria-label="Retirer ${esc(it.nom)} de la liste">×</button>`;
     li.children[0].onchange=e=>{it.done=e.target.checked;save();render()};
@@ -153,19 +177,24 @@ function renderCat(){
   cat.forEach(c=>{
     const li=document.createElement('li');
     const ex=items.find(i=>norm(i.nom)===norm(c.nom));
-    li.innerHTML=`<div class="nom">${esc(c.nom)}<small>${ex?'Dans la liste : × '+ex.qte:''}</small></div>
-      <button class="prix" aria-label="Modifier le prix de ${esc(c.nom)}">${eur(c.prix)}</button>
+    const vig=c.photo?`<img src="${c.photo}" alt="">`:'📷';
+    li.innerHTML=`<div class="nom"><button class="vignette" aria-label="Photo de ${esc(c.nom)}">${vig}</button><span>${esc(c.nom)}<small>${ex?'Dans la liste : × '+ex.qte:''}</small></span></div>
+      <button class="prix ${c.prix==null?'vide':''}" aria-label="Modifier le prix de ${esc(c.nom)}">${c.prix==null?'+ prix':eur(c.prix)}</button>
       <button class="moins" aria-label="Retirer un ${esc(c.nom)}" ${ex&&ex.qte>1?'':'disabled'}>−</button>
       <button class="ajout" aria-label="Ajouter ${esc(c.nom)} à la liste">+</button>
       <button class="sup" aria-label="Supprimer ${esc(c.nom)} des produits enregistrés">×</button>`;
     li.children[1].onclick=()=>{
-      const v=prompt('Nouveau prix de « '+c.nom+' » (€)',c.prix);
+      const v=prompt('Nouveau prix de « '+c.nom+' » (€)',c.prix??'');
       const n=v===null?null:toNum(v); if(n===null)return;
       c.prix=n; items.filter(i=>norm(i.nom)===norm(c.nom)).forEach(i=>i.prix=n); save(); render();
     };
     li.children[2].onclick=()=>{if(ex&&ex.qte>1){ex.qte--;save();render()}};
     li.children[3].onclick=()=>{addItem(c.nom,c.prix,1);save();render()};
     li.children[4].onclick=()=>{if(confirm('Supprimer « '+c.nom+' » des produits enregistrés ?')){cat=cat.filter(x=>x!==c);save();render()}};
+    li.querySelector('.vignette').onclick=()=>{
+      cible=c;
+      if(c.photo){$('photo-titre').textContent=c.nom;$('photo-dlg').showModal()}else $('fichier').click();
+    };
     ul.appendChild(li);
   });
 }
@@ -173,7 +202,7 @@ function renderCat(){
 // Affiche le prix enregistré quand on tape un produit connu
 $('nom').addEventListener('input',()=>{
   const c=find($('nom').value);
-  $('prix').placeholder=c?eur(c.prix)+' (enregistré)':'Prix €';
+  $('prix').placeholder=c&&c.prix!=null?eur(c.prix)+' (enregistré)':'Prix €';
 });
 
 $('f').onsubmit=e=>{
@@ -181,14 +210,47 @@ $('f').onsubmit=e=>{
   const nom=$('nom').value.trim(), c=find(nom);
   let p=toNum($('prix').value);
   if(p===null&&c)p=c.prix;        // prix vide : reprend le prix enregistré
-  remember(nom,p);                // prix différent : mise à jour
+  remember(nom,p,photoEnCours);   // prix différent : mise à jour
   addItem(nom,p,Math.max(1,parseInt($('qte').value)||1));
   save();render();
   $('nom').value='';$('prix').value='';$('qte').value=1;$('prix').placeholder='Prix €';$('nom').focus();
+  photoEnCours=null;majPhoto();
 };
 $('clear').onclick=()=>{
   if(items.some(x=>x.done)&&confirm('Retirer les articles cochés de la liste ? Ils restent dans vos produits enregistrés.')){items=items.filter(x=>!x.done);save();render()}
 };
+
+// Photos : miniature carrée de 160 px pour garder l'app légère
+function miniature(file){
+  return new Promise((ok,ko)=>{
+    const img=new Image(), u=URL.createObjectURL(file);
+    img.onload=()=>{
+      const T=160, s=Math.min(img.width,img.height), cv=document.createElement('canvas');
+      cv.width=cv.height=T;
+      cv.getContext('2d').drawImage(img,(img.width-s)/2,(img.height-s)/2,s,s,0,0,T,T);
+      URL.revokeObjectURL(u); ok(cv.toDataURL('image/jpeg',0.72));
+    };
+    img.onerror=()=>{URL.revokeObjectURL(u);ko()};
+    img.src=u;
+  });
+}
+function majPhoto(){
+  $('photo-btn').innerHTML=photoEnCours?`<img src="${photoEnCours}" alt="">Photo`:'📷 Photo';
+  $('photo-x').hidden=!photoEnCours;
+}
+$('photo-btn').onclick=()=>{cible=null;$('fichier').click()};
+$('photo-x').onclick=()=>{photoEnCours=null;majPhoto()};
+$('fichier').onchange=async e=>{
+  const f=e.target.files[0]; e.target.value=''; if(!f)return;
+  try{
+    const d=await miniature(f);
+    if(cible){cible.photo=d;cible=null;save();render()}
+    else{photoEnCours=d;majPhoto()}
+  }catch(_){alert("Cette photo n'a pas pu être lue. Réessayez.")}
+};
+$('p-nouvelle').onclick=()=>{$('photo-dlg').close();$('fichier').click()};
+$('p-suppr').onclick=()=>{if(cible){cible.photo=null;cible=null;save();render()}$('photo-dlg').close()};
+$('p-fermer').onclick=()=>{cible=null;$('photo-dlg').close()};
 
 // Paramètres
 $('version').textContent='v'+VERSION;
