@@ -34,7 +34,7 @@ input:focus,button:focus-visible,summary:focus-visible{outline:2px solid var(--a
 .vignette img{width:100%;height:100%;border-radius:0}
 li.done .nom img{opacity:.5}
 #photo-dlg .maj{display:block;width:100%;margin-bottom:8px}
-#photo-grand{display:block;width:100%;max-width:280px;aspect-ratio:1;object-fit:cover;border-radius:12px;margin:0 auto 14px}
+#photo-grand{cursor:zoom-out;display:block;width:100%;max-width:280px;aspect-ratio:1;object-fit:cover;border-radius:12px;margin:0 auto 14px}
 .nom img{cursor:zoom-in}
 #zoom{padding:0;border:0;background:transparent;max-width:92vw;overflow:visible}
 #zoom::backdrop{background:rgba(0,0,0,.75)}
@@ -118,7 +118,7 @@ footer{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:
   </div>
 </footer>
 <script>
-const VERSION='1.4.2';
+const VERSION='1.4.3';
 let invite=null,surInvite=null;
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();invite=e;if(surInvite)surInvite()});
 addEventListener('appinstalled',()=>{invite=null;majInstall()});
@@ -261,6 +261,11 @@ $('fichier').onchange=async e=>{
 $('p-nouvelle').onclick=()=>{$('photo-dlg').close();$('fichier').click()};
 $('p-suppr').onclick=()=>{if(cible){cible.photo=null;cible=null;save();render()}$('photo-dlg').close()};
 $('p-fermer').onclick=()=>{cible=null;$('photo-dlg').close()};
+$('photo-grand').onclick=()=>{cible=null;$('photo-dlg').close()};
+$('photo-dlg').addEventListener('click',e=>{ // clic en dehors de la fenêtre : on ferme
+  const r=e.currentTarget.getBoundingClientRect();
+  if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom){cible=null;e.currentTarget.close()}
+});
 
 // Paramètres
 $('version').textContent='v'+VERSION;
