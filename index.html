@@ -80,10 +80,12 @@ li.titre h3{margin:0;font-size:13px;text-transform:uppercase;letter-spacing:.06e
 .rayon-tag.vide{border-style:dashed;color:var(--mute)}
 #rayon-dlg .maj{display:block;width:100%;margin-bottom:8px;text-align:left}
 #reg-rayons{margin:8px 0 10px}
-#reg-rayons li{grid-template-columns:1fr 34px 34px 34px 28px;gap:4px;padding:6px 8px;margin-bottom:6px}
+#reg-rayons li{grid-template-columns:34px 1fr 34px 28px;gap:4px;padding:6px 8px;margin-bottom:6px}
 #reg-rayons .rn{min-width:0;overflow-wrap:anywhere}
+#reg-rayons li.glisse{position:relative;z-index:2;box-shadow:0 6px 18px rgba(0,0,0,.3);border-color:var(--accent)}
+.poignee{background:none;border:0;color:var(--mute);font-size:22px;line-height:1;height:32px;width:34px;padding:0;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.glisse .poignee{cursor:grabbing;color:var(--accent)}
 .btn-mini{background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;width:34px;height:32px;font-size:14px;cursor:pointer;padding:0}
-.btn-mini:disabled{opacity:.35;cursor:default}
 .ligne-add{display:flex;gap:8px;margin-bottom:18px}
 .ligne-add input{flex:1}
 </style>
@@ -151,7 +153,7 @@ li.titre h3{margin:0;font-size:13px;text-transform:uppercase;letter-spacing:.06e
   </div>
 </footer>
 <script>
-const VERSION='1.5.0';
+const VERSION='1.5.1';
 let invite=null,surInvite=null;
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();invite=e;if(surInvite)surInvite()});
 addEventListener('appinstalled',()=>{invite=null;majInstall()});
@@ -251,22 +253,57 @@ function renderRayons(){
   if(!rayons.length)ul.innerHTML='<p class="vide-msg" style="padding:8px 0">Aucun rayon. Ajoutez-en un ci-dessous.</p>';
   rayons.forEach((n,i)=>{
     const li=document.createElement('li');
-    li.innerHTML=`<span class="rn">${esc(n)}</span>
-      <button class="btn-mini" aria-label="Monter ${esc(n)}" ${i===0?'disabled':''}>▲</button>
-      <button class="btn-mini" aria-label="Descendre ${esc(n)}" ${i===rayons.length-1?'disabled':''}>▼</button>
+    li.dataset.nom=n;
+    li.innerHTML=`<button class="poignee" aria-label="Déplacer ${esc(n)} : maintenir et glisser">⠿</button>
+      <span class="rn">${esc(n)}</span>
       <button class="btn-mini" aria-label="Renommer ${esc(n)}">✎</button>
       <button class="sup" aria-label="Supprimer le rayon ${esc(n)}">×</button>`;
     const b=li.querySelectorAll('button');
-    b[0].onclick=()=>deplacer(i,-1);
-    b[1].onclick=()=>deplacer(i,1);
-    b[2].onclick=()=>renommer(i);
-    b[3].onclick=()=>supprimer(i);
+    b[0].addEventListener('pointerdown',e=>glisser(e,li));
+    b[1].onclick=()=>renommer(i);
+    b[2].onclick=()=>supprimer(i);
     ul.appendChild(li);
   });
 }
-function deplacer(i,d){
-  const j=i+d; if(j<0||j>=rayons.length)return;
-  [rayons[i],rayons[j]]=[rayons[j],rayons[i]]; save(); render();
+// Glisser-déposer d'un rayon par sa poignée (tactile et souris)
+function glisser(e,li){
+  if(e.button>0)return;
+  e.preventDefault();
+  const ul=li.parentNode, h=e.currentTarget, dlg=$('reglages');
+  const grab=e.clientY-li.getBoundingClientRect().top;
+  let y=e.clientY, raf=0;
+  try{h.setPointerCapture(e.pointerId)}catch(_){}
+  li.classList.add('glisse');
+  const place=()=>{
+    li.style.transform='';
+    let ref=null;
+    for(const s of ul.children){
+      if(s===li)continue;
+      const r=s.getBoundingClientRect();
+      if(y<r.top+r.height/2){ref=s;break}
+    }
+    if(li.nextElementSibling!==ref)ul.insertBefore(li,ref); // les autres lignes s'écartent
+    li.style.transform=`translateY(${y-grab-li.getBoundingClientRect().top}px)`;
+  };
+  const defile=()=>{ // défilement automatique près des bords de la fenêtre
+    const r=dlg.getBoundingClientRect();
+    if(y<r.top+50)dlg.scrollTop-=10; else if(y>r.bottom-50)dlg.scrollTop+=10;
+    place(); raf=requestAnimationFrame(defile);
+  };
+  const bouge=ev=>{y=ev.clientY};
+  const fin=()=>{
+    cancelAnimationFrame(raf);
+    h.removeEventListener('pointermove',bouge);
+    h.removeEventListener('pointerup',fin);
+    h.removeEventListener('pointercancel',fin);
+    const ordre=[...ul.children].map(x=>x.dataset.nom);
+    if(ordre.length===rayons.length&&ordre.some((n,k)=>n!==rayons[k])){rayons=ordre;save()}
+    render(); // remet les lignes à leur place et applique le nouvel ordre à la liste
+  };
+  h.addEventListener('pointermove',bouge);
+  h.addEventListener('pointerup',fin);
+  h.addEventListener('pointercancel',fin);
+  defile();
 }
 function renommer(i){
   const v=prompt('Nouveau nom du rayon',rayons[i]); if(v===null)return;
