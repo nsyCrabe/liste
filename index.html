@@ -106,9 +106,24 @@ body.mode-magasin .btn-coche{width:36px;height:36px}
 body.mode-magasin .nom img, body.mode-magasin .vignette{width:52px;height:52px}
 body.mode-magasin .prix{font-size:1.1rem;padding:8px 12px}
 body.mode-magasin #quitter-magasin{display:block;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:1000;background:var(--accent);color:#fff;border:0;border-radius:999px;padding:14px 28px;font:600 16px system-ui;box-shadow:0 6px 20px rgba(0,0,0,0.4);cursor:pointer}
+
+/* Fond d'écran personnalisé */
+#fond{position:fixed;inset:-24px;z-index:-1;background-size:cover;background-position:center;filter:blur(var(--flou,0px));pointer-events:none}
+#voile-fond{position:fixed;inset:0;z-index:-1;background:var(--bg);opacity:var(--voile,0);pointer-events:none}
+body.fond-actif{background:transparent}
+body.fond-actif h1,body.fond-actif li.titre h3,body.fond-actif #liste .vide-msg{background:color-mix(in srgb,var(--card) 82%,transparent);border-radius:10px;padding:6px 12px;width:fit-content}
+body.fond-actif #liste .vide-msg{padding:14px 16px;width:auto}
+input[type=range]{padding:0;border:0;background:none;accent-color:var(--accent);width:100%}
+.reglage{display:grid;grid-template-columns:1fr auto;gap:4px 8px;font:600 14px system-ui;margin:0 0 10px}
+.reglage input{grid-column:1/-1}
+.reglage output{color:var(--mute);font-weight:400}
+.fond-actions{display:flex;gap:8px;margin-bottom:18px}
+.fond-actions .maj{flex:1}
 </style>
 </head>
 <body>
+<div id="fond" hidden></div>
+<div id="voile-fond" hidden></div>
 <main>
   <div class="entete">
     <h1>Ma liste de courses</h1>
@@ -149,6 +164,18 @@ body.mode-magasin #quitter-magasin{display:block;position:fixed;bottom:24px;left
     <input id="rayon-nouveau" placeholder="Nouveau rayon" enterkeyhint="done" aria-label="Nom du nouveau rayon">
     <button class="maj" id="rayon-ajouter">Ajouter</button>
   </div>
+  <h2>Fond d'écran</h2>
+  <p>Choisissez une photo de votre album, puis réglez le flou et le voile pour garder les articles bien lisibles.</p>
+  <button class="maj" id="fond-choisir" style="display:block;width:100%;margin-bottom:10px">Choisir une photo</button>
+  <div id="fond-reglages" hidden>
+    <label class="reglage">Flou <output id="flou-val"></output><input type="range" id="flou" min="0" max="20" step="1"></label>
+    <label class="reglage">Voile <output id="voile-val"></output><input type="range" id="voile" min="0" max="80" step="5"></label>
+    <div class="fond-actions">
+      <button class="maj" id="flou-zero">Flou à zéro</button>
+      <button class="maj" id="fond-retirer">Retirer le fond</button>
+    </div>
+  </div>
+  <input type="file" id="fond-fichier" accept="image/*" hidden>
   <button class="maj" id="installer">Installer l'app</button>
   <p id="install-etat" role="status" style="margin:8px 0 14px"></p>
   <button class="maj" id="maj">Forcer la mise à jour</button>
@@ -177,7 +204,7 @@ body.mode-magasin #quitter-magasin{display:block;position:fixed;bottom:24px;left
   </div>
 </footer>
 <script>
-const VERSION='1.6.2';
+const VERSION='1.6.3';
 let invite=null,surInvite=null;
 let editionOrdreActive=false;
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();invite=e;if(surInvite)surInvite()});
@@ -559,6 +586,87 @@ $('reglages').addEventListener('click',e=>{if(e.target===$('reglages')){$('regla
     setTimeout(()=>location.replace(location.pathname+'?maj='+Date.now()),400);
   }catch(e){etat.textContent='La mise à jour a échoué. Vérifiez votre connexion et réessayez.'}
 };
+
+// Fond d'écran personnalisé (image dans IndexedDB, réglages dans localStorage)
+const FK='courses-fond-v1';
+let fondData=null;
+let fondReg=(()=>{
+  try{
+    const v=JSON.parse(localStorage.getItem(FK));
+    if(v&&Number.isFinite(v.flou)&&Number.isFinite(v.voile))return{flou:Math.min(20,Math.max(0,v.flou)),voile:Math.min(80,Math.max(0,v.voile))};
+  }catch(e){}
+  return{flou:4,voile:20};
+})();
+const saveFond=()=>{try{localStorage.setItem(FK,JSON.stringify(fondReg))}catch(e){}};
+function idb(){
+  return new Promise((ok,ko)=>{
+    const r=indexedDB.open('courses-db',1);
+    r.onupgradeneeded=()=>r.result.createObjectStore('kv');
+    r.onsuccess=()=>ok(r.result);
+    r.onerror=()=>ko(r.error);
+  });
+}
+async function idbGet(k){
+  const db=await idb();
+  return new Promise((ok,ko)=>{const q=db.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>ok(q.result);q.onerror=()=>ko(q.error)});
+}
+async function idbSet(k,v){
+  const db=await idb();
+  return new Promise((ok,ko)=>{const t=db.transaction('kv','readwrite');t.objectStore('kv').put(v,k);t.oncomplete=()=>ok();t.onerror=()=>ko(t.error);t.onabort=()=>ko(t.error)});
+}
+async function idbDel(k){
+  const db=await idb();
+  return new Promise((ok,ko)=>{const t=db.transaction('kv','readwrite');t.objectStore('kv').delete(k);t.oncomplete=()=>ok();t.onerror=()=>ko(t.error);t.onabort=()=>ko(t.error)});
+}
+function reglerFond(){
+  const r=document.documentElement.style;
+  r.setProperty('--flou',fondReg.flou+'px');
+  r.setProperty('--voile',fondReg.voile/100);
+  $('flou').value=fondReg.flou; $('flou-val').textContent=fondReg.flou+' px';
+  $('voile').value=fondReg.voile; $('voile-val').textContent=fondReg.voile+' %';
+}
+function appliquerFond(){
+  const f=$('fond'), v=$('voile-fond');
+  document.body.classList.toggle('fond-actif',!!fondData);
+  f.style.backgroundImage=fondData?`url("${fondData}")`:'';
+  f.hidden=v.hidden=!fondData;
+  $('fond-reglages').hidden=!fondData;
+  $('fond-choisir').textContent=fondData?'Changer la photo':'Choisir une photo';
+  reglerFond();
+}
+function fondImage(file){
+  return new Promise((ok,ko)=>{
+    const img=new Image(), u=URL.createObjectURL(file);
+    img.onload=()=>{
+      const M=1280, k=Math.min(1,M/Math.max(img.width,img.height));
+      const cv=document.createElement('canvas');
+      cv.width=Math.round(img.width*k); cv.height=Math.round(img.height*k);
+      cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
+      URL.revokeObjectURL(u); ok(cv.toDataURL('image/jpeg',0.8));
+    };
+    img.onerror=()=>{URL.revokeObjectURL(u);ko()};
+    img.src=u;
+  });
+}
+$('fond-choisir').onclick=()=>$('fond-fichier').click();
+$('fond-fichier').onchange=async e=>{
+  const f=e.target.files[0]; e.target.value=''; if(!f)return;
+  try{
+    const d=await fondImage(f);
+    await idbSet('fond',d);
+    fondData=d; appliquerFond();
+    try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(_){}
+  }catch(_){alert("Cette photo n'a pas pu être lue ou enregistrée. Réessayez.")}
+};
+$('fond-retirer').onclick=async()=>{
+  try{await idbDel('fond')}catch(_){}
+  fondData=null; appliquerFond();
+};
+$('flou').oninput=e=>{fondReg.flou=+e.target.value;reglerFond();saveFond()};
+$('voile').oninput=e=>{fondReg.voile=+e.target.value;reglerFond();saveFond()};
+$('flou-zero').onclick=()=>{fondReg.flou=0;reglerFond();saveFond()};
+appliquerFond();
+idbGet('fond').then(d=>{if(typeof d==='string'&&d){fondData=d;appliquerFond()}}).catch(()=>{});
 
 save();render();
 if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js'));
