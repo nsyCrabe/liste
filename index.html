@@ -119,6 +119,55 @@ input[type=range]{padding:0;border:0;background:none;accent-color:var(--accent);
 .reglage output{color:var(--mute);font-weight:400}
 .fond-actions{display:flex;gap:8px;margin-bottom:18px}
 .fond-actions .maj{flex:1}
+
+/* ===== v1.7 : interface ===== */
+:root{--r:14px;--ombre:0 1px 2px rgba(22,38,31,.06),0 6px 16px rgba(22,38,31,.06)}
+body{font-family:ui-rounded,"SF Pro Rounded","Avenir Next",system-ui,-apple-system,"Segoe UI",sans-serif}
+h1{font-size:28px;font-weight:800;line-height:1.1}
+h2{font-weight:700}
+.gear{width:44px;height:44px;border-radius:14px;box-shadow:var(--ombre)}
+.gear[aria-pressed=true]{background:var(--accent);color:#fff;border-color:var(--accent)}
+#masquer-faits{display:none}
+#progres{margin:0 0 16px}
+#progres .ligne{display:flex;justify-content:space-between;gap:8px;font-size:14px;color:var(--mute);margin-bottom:6px;font-variant-numeric:tabular-nums}
+#prog-fin{color:var(--accent);font-weight:700}
+#progres .piste{height:8px;border-radius:99px;background:var(--line);overflow:hidden}
+#progres .barre{height:100%;width:0;background:var(--accent);border-radius:99px;transition:width .35s ease}
+form{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px;box-shadow:var(--ombre)}
+form input,form select{background:var(--bg)}
+form.compact{grid-template-columns:1fr 84px 60px}
+form.compact #unite,form.compact #rayon{display:none}
+.ajouter{min-height:48px;border-radius:12px;font-size:16px}
+.photo-btn{min-height:48px;border-radius:12px}
+li{border-radius:var(--r);box-shadow:var(--ombre);transition:opacity .2s}
+.btn-coche:active{transform:scale(.88)}
+.sup{width:36px;height:36px}
+.pas{display:inline-flex;align-items:center;gap:2px;margin:4px 0 0 6px;background:var(--bg);border:1px solid var(--line);border-radius:999px;vertical-align:top}
+.pas b{min-width:22px;text-align:center;font-size:14px;font-variant-numeric:tabular-nums}
+.pm{width:32px;height:28px;border:0;background:none;color:var(--ink);font-size:18px;line-height:1;cursor:pointer;border-radius:999px}
+li.titre{box-shadow:none;transition:none}
+li.titre h3{cursor:pointer;user-select:none;-webkit-user-select:none}
+li.titre h3::after{content:'▾';margin-left:auto;font-size:14px;transition:transform .15s}
+li.titre.ferme h3::after{transform:rotate(-90deg)}
+.vide-msg{border:1.5px dashed var(--line);border-radius:var(--r);padding:28px 20px;line-height:1.5}
+footer{background:color-mix(in srgb,var(--card) 93%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-radius:20px 20px 0 0;box-shadow:0 -8px 28px rgba(0,0,0,.1);z-index:20}
+.tot b{font-size:28px;font-weight:800;letter-spacing:-.02em}
+.cat-btn{min-height:44px;border-radius:12px}
+#panneau{max-height:55vh}
+#cat-q{position:sticky;top:0;z-index:1;width:100%;margin-bottom:8px;background:var(--card)}
+dialog{border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.edit-corps{display:grid;gap:12px}
+.edit-corps .reglage{margin:0}
+#toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 158px);transform:translate(-50%,20px);opacity:0;pointer-events:none;z-index:1500;display:flex;align-items:center;gap:14px;background:var(--ink);color:var(--bg);padding:10px 14px 10px 18px;border-radius:999px;font:600 14px system-ui;max-width:92vw;transition:opacity .2s,transform .2s;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+#toast.on{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+#toast button{background:none;border:0;color:var(--tag);font:700 14px system-ui;cursor:pointer;padding:6px}
+/* Mode magasin : total visible, boutons repositionnés */
+body.mode-magasin #masquer-faits{display:grid}
+body.mode-magasin footer{display:block!important}
+body.mode-magasin #cat-titre,body.mode-magasin #panneau,body.mode-magasin #clear,body.mode-magasin .pas{display:none}
+body.mode-magasin #quitter-magasin{bottom:calc(env(safe-area-inset-bottom) + 108px)}
+body.mode-magasin.masque-faits li.done{display:none}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
 <body>
@@ -128,6 +177,7 @@ input[type=range]{padding:0;border:0;background:none;accent-color:var(--accent);
   <div class="entete">
     <h1>Ma liste de courses</h1>
     <div class="entete-actions">
+      <button class="gear" id="masquer-faits" aria-label="Masquer ou afficher les articles cochés" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
       <button class="gear" id="ouvrir-magasin" aria-label="Mode Magasin">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
       </button>
@@ -136,7 +186,8 @@ input[type=range]{padding:0;border:0;background:none;accent-color:var(--accent);
       </button>
     </div>
   </div>
-  <form id="f" autocomplete="off">
+  <div id="progres"><div class="ligne"><span id="prog-txt"></span><span id="prog-fin"></span></div><div class="piste"><div class="barre" id="prog-barre"></div></div></div>
+  <form id="f" class="compact" autocomplete="off">
     <input id="nom" list="suggestions" placeholder="Article (ex. lait)" required aria-label="Article">
     <datalist id="suggestions"></datalist>
     <input id="prix" type="number" inputmode="decimal" step="0.01" min="0" placeholder="Prix €" aria-label="Prix en euros">
@@ -144,6 +195,7 @@ input[type=range]{padding:0;border:0;background:none;accent-color:var(--accent);
     <input id="unite" placeholder="Format (ex. 500g)" aria-label="Format ou unité">
     <select id="rayon" aria-label="Rayon"></select>
     <div class="ligne2">
+      <button type="button" class="photo-btn" id="opt-btn" aria-expanded="false">Options</button>
       <button type="button" class="photo-btn" id="photo-btn">📷 Photo</button>
       <button type="button" class="photo-btn" id="photo-x" hidden aria-label="Retirer la photo">×</button>
       <button class="ajouter">Ajouter à la liste</button>
@@ -164,6 +216,13 @@ input[type=range]{padding:0;border:0;background:none;accent-color:var(--accent);
     <input id="rayon-nouveau" placeholder="Nouveau rayon" enterkeyhint="done" aria-label="Nom du nouveau rayon">
     <button class="maj" id="rayon-ajouter">Ajouter</button>
   </div>
+  <h2>Sauvegarde</h2>
+  <p>Vos produits sont gardés sur cet appareil. Exportez-les pour en garder une copie ou les transférer. Importer ajoute les produits manquants et ne supprime jamais rien.</p>
+  <button class="maj" id="exporter" style="display:block;width:100%;margin-bottom:8px">Exporter mes données</button>
+  <button class="maj" id="importer" style="display:block;width:100%;margin-bottom:8px">Importer une sauvegarde</button>
+  <button class="maj" id="restaurer" style="display:block;width:100%;margin-bottom:8px">Récupérer la copie automatique</button>
+  <input type="file" id="import-fichier" accept="application/json,.json" hidden>
+  <p id="sauv-etat" role="status" style="margin:0 0 18px"></p>
   <h2>Fond d'écran</h2>
   <p>Choisissez une photo de votre album, puis réglez le flou et le voile pour garder les articles bien lisibles.</p>
   <button class="maj" id="fond-choisir" style="display:block;width:100%;margin-bottom:10px">Choisir une photo</button>
@@ -195,8 +254,19 @@ input[type=range]{padding:0;border:0;background:none;accent-color:var(--accent);
   <button class="fermer" id="rayon-fermer">Annuler</button>
 </dialog>
 <dialog id="zoom" aria-label="Photo agrandie"><img id="zoom-img" alt=""></dialog>
+<div id="toast" role="status" aria-live="polite"><span id="toast-txt"></span><button id="toast-undo" hidden>Annuler</button></div>
+<dialog id="edit-dlg" aria-labelledby="edit-titre">
+  <h2 id="edit-titre"></h2>
+  <div class="edit-corps">
+    <label class="reglage">Prix unitaire (€)<input id="e-prix" type="number" inputmode="decimal" step="0.01" min="0"></label>
+    <label class="reglage">Quantité<input id="e-qte" type="number" inputmode="numeric" min="1"></label>
+    <label class="reglage">Format<input id="e-unite" placeholder="ex. 500g"></label>
+    <button class="ajouter" id="e-ok" style="width:100%">Enregistrer</button>
+    <button class="fermer" id="e-annuler">Annuler</button>
+  </div>
+</dialog>
 <footer>
-  <div id="panneau" hidden><ul id="catalogue"></ul></div>
+  <div id="panneau" hidden><input id="cat-q" type="search" placeholder="Rechercher dans mes produits" aria-label="Rechercher dans mes produits"><ul id="catalogue"></ul></div>
   <button class="cat-btn" id="cat-titre" aria-expanded="false" aria-controls="panneau"><span id="cat-txt">Mes produits enregistrés</span><span id="cat-fl" aria-hidden="true">▲</span></button>
   <div class="tot">
     <div><span>Total de la liste</span><br><b id="total">0,00 €</b></div>
@@ -204,7 +274,7 @@ input[type=range]{padding:0;border:0;background:none;accent-color:var(--accent);
   </div>
 </footer>
 <script>
-const VERSION='1.6.3';
+const VERSION='1.7.0';
 let invite=null,surInvite=null;
 let editionOrdreActive=false;
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();invite=e;if(surInvite)surInvite()});
@@ -214,11 +284,17 @@ const DEFAUT=['Fruits et légumes','Boulangerie','Boucherie / Poissonnerie','Pro
 const PALETTE_DEFAUT=['#2E7D32','#E65100','#C62828','#0277BD','#00838F','#6A1B9A','#AD1457','#4E342E','#37474F','#00695C','#8D6E63','#558B2F'];
 
 const $=id=>document.getElementById(id);
-const load=k=>{try{return JSON.parse(localStorage.getItem(k))||[]}catch(e){return[]}};
+const load=k=>{try{return JSON.parse(localStorage.getItem(k))||[]}catch(e){try{localStorage.setItem(k+'-corrompu',localStorage.getItem(k))}catch(_){}return[]}};
 let items=load(KEY), cat=load(CK);
 let rayons=(()=>{try{const v=JSON.parse(localStorage.getItem(RK));if(Array.isArray(v))return v}catch(e){}return DEFAUT.slice()})();
 let couleursRayons=(()=>{try{const v=JSON.parse(localStorage.getItem(RCK));if(v&&typeof v==='object')return v}catch(e){}return{}})();
 
+// Copie automatique quotidienne (sans photos, pour ne pas saturer le stockage)
+try{
+  const BK='courses-backup-auto-v1', b=JSON.parse(localStorage.getItem(BK)||'null'), auj=new Date().toISOString().slice(0,10);
+  if((!b||b.jour!==auj)&&(items.length||cat.length)&&cat.length>=(b?b.cat.length:0)*0.7)
+    localStorage.setItem(BK,JSON.stringify({jour:auj,items,cat:cat.map(c=>({...c,photo:null})),rayons,couleurs:couleursRayons}));
+}catch(_){}
 const couleurRayon=nom=>{
   if(!nom) return 'var(--line)';
   if(couleursRayons[nom]) return couleursRayons[nom];
@@ -235,7 +311,7 @@ const save=()=>{try{
   localStorage.setItem(CK,JSON.stringify(cat));
   localStorage.setItem(RK,JSON.stringify(rayons));
   localStorage.setItem(RCK,JSON.stringify(couleursRayons));
-}catch(e){}};
+}catch(e){toast('Espace plein : exportez vos données dans Paramètres, puis retirez des photos.')}};
 
 const eur=n=>n.toLocaleString('fr-FR',{style:'currency',currency:'EUR'});
 const norm=s=>s.trim().toLowerCase();
@@ -260,6 +336,8 @@ const tagRayon=nom=>{
 };
 function setRayon(nom,r){const it=items.find(i=>norm(i.nom)===norm(nom));remember(nom,it?it.prix:undefined,null,r,it?it.unite:undefined)}
 let rayonNom=null;
+const repli=new Set();
+const faitsMasques=()=>document.body.classList.contains('mode-magasin')&&document.body.classList.contains('masque-faits');
 function ouvrirRayon(nom){
   rayonNom=nom;
   const cur=rayonDe(nom), box=$('rayon-choix'); box.innerHTML='';$('rayon-titre').textContent=nom;
@@ -295,12 +373,16 @@ function render(){
   const groupes=rayons.map(n=>({nom:n,l:[]})); groupes.push({nom:'',l:[]});
   items.forEach(it=>{const r=rayonDe(it.nom);(groupes.find(g=>g.nom===r)||groupes[groupes.length-1]).l.push(it)});
   groupes.forEach(g=>{
-    if(!g.l.length)return;
+    if(!g.l.length||(faitsMasques()&&g.l.every(x=>x.done)))return;
     g.l.sort((a,b)=>Number(!!a.done)-Number(!!b.done));
     const t=document.createElement('li'); t.className='titre';
     const coul=couleurRayon(g.nom);
     t.innerHTML=`<h3><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${coul}"></span>${esc(g.nom||'Sans rayon')} · ${g.l.length}</h3>`;
     ul.appendChild(t);
+    t.setAttribute('role','button');t.tabIndex=0;t.setAttribute('aria-expanded',!repli.has(g.nom));
+    t.onclick=()=>{repli.has(g.nom)?repli.delete(g.nom):repli.add(g.nom);render()};
+    t.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();t.onclick()}};
+    if(repli.has(g.nom)){t.classList.add('ferme');return}
     g.l.forEach(it=>{
       const li=document.createElement('li'); if(it.done)li.className='done';
       if(g.nom) li.style.borderLeftColor = coul;
@@ -311,23 +393,25 @@ function render(){
       const styleBtnCoche = it.done ? `background:${coul};border-color:${coul}` : `border-color:${coul}`;
 
       li.innerHTML=`<button class="btn-coche" style="${styleBtnCoche}" aria-label="Cocher ${esc(it.nom)}"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></button>
-        <div class="nom">${img}<span>${esc(it.nom)}<small>${detailQte}</small>${tagRayon(it.nom)}</span></div>
+        <div class="nom">${img}<span>${esc(it.nom)}<small>${detailQte}</small>${tagRayon(it.nom)}${it.done?'':`<div class="pas"><button class="pm" aria-label="Moins de ${esc(it.nom)}">−</button><b>${it.qte}</b><button class="pm" aria-label="Plus de ${esc(it.nom)}">+</button></div>`}</span></div>
         <button class="prix ${it.prix==null?'vide':''}" aria-label="Modifier le prix">${it.prix==null?'+ prix':eur(total)}</button>
         <button class="sup" aria-label="Retirer ${esc(it.nom)} de la liste">×</button>`;
       
-      li.children[0].onclick=()=>{it.done=!it.done;save();render()};
+      li.children[0].onclick=()=>{it.done=!it.done;try{navigator.vibrate&&navigator.vibrate(10)}catch(_){}save();render()};
+      const pm=li.querySelectorAll('.pas .pm');
+      if(pm.length){pm[0].onclick=()=>{if(it.qte>1){it.qte--;save();render()}};pm[1].onclick=()=>{it.qte++;save();render()}}
       const im=li.querySelector('.nom img'); if(im)im.onclick=()=>agrandir(cc.photo,it.nom);
       li.querySelector('.rayon-tag').onclick=()=>ouvrirRayon(it.nom);
-      li.children[2].onclick=()=>{
-        const v=prompt('Nouveau prix unitaire de « '+it.nom+' » (€)',it.prix??'');
-        if(v===null)return;
-        it.prix=toNum(v); remember(it.nom,it.prix,undefined,undefined,it.unite); save(); render();
-      };
-      li.children[3].onclick=()=>{items.splice(items.indexOf(it),1);save();render()};
+      li.children[2].onclick=()=>editer(it);
+      li.children[3].onclick=()=>{const snap=JSON.stringify(items);items.splice(items.indexOf(it),1);save();render();toast('« '+it.nom+' » retiré de la liste',()=>{items=JSON.parse(snap);save();render()})};
       ul.appendChild(li);
     });
   });
   const sum=l=>l.reduce((s,x)=>s+(x.prix||0)*x.qte,0);
+  const nb=items.length,fait=items.filter(x=>x.done).length;
+  $('prog-txt').textContent=nb?fait+' sur '+nb+' dans le panier':'Liste vide';
+  $('prog-fin').textContent=nb&&fait===nb?'Courses terminées ✓':'';
+  $('prog-barre').style.width=(nb?fait/nb*100:0)+'%';
   $('total').textContent=eur(sum(items));$('pris').textContent='Dans le panier : '+eur(sum(items.filter(x=>x.done)));
   fillSelect();renderRayons();renderCat();
 }
@@ -445,7 +529,9 @@ function renderCat(){
   cat.forEach(c=>{const o=document.createElement('option');o.value=c.nom;dl.appendChild(o)});
   const ul=$('catalogue'); ul.innerHTML='';
   if(!cat.length)ul.innerHTML='<p class="vide-msg">Aucun produit pour l\'instant. Ceux que vous ajoutez avec un prix sont enregistrés ici.</p>';
+  const q=norm($('cat-q').value);
   cat.forEach(c=>{
+    if(q&&!norm(c.nom).includes(q))return;
     const li=document.createElement('li');
     const ex=items.find(i=>norm(i.nom)===norm(c.nom));
     const vig=c.photo?`<img src="${c.photo}" alt="">`:'📷';
@@ -501,7 +587,10 @@ $('f').onsubmit=e=>{
   photoEnCours=null;majPhoto();
 };
 $('clear').onclick=()=>{
-  if(items.some(x=>x.done)&&confirm('Retirer les articles cochés de la liste ? Ils restent dans vos produits enregistrés.')){items=items.filter(x=>!x.done);save();render()}
+  const n=items.filter(x=>x.done).length;
+  if(!n){toast('Aucun article coché pour le moment');return}
+  const snap=JSON.stringify(items);items=items.filter(x=>!x.done);save();render();
+  toast(n+' article'+(n>1?'s':'')+' retiré'+(n>1?'s':'')+' (toujours dans vos produits)',()=>{items=JSON.parse(snap);save();render()});
 };
 
 function agrandir(src,nom){$('zoom-img').src=src;$('zoom-img').alt=nom;$('zoom').showModal()}
@@ -539,7 +628,11 @@ $('p-nouvelle').onclick=()=>{$('photo-dlg').close();$('fichier').click()};$('p-s
 });
 
 // Mode Magasin
-$('ouvrir-magasin').onclick=()=>document.body.classList.add('mode-magasin');$('quitter-magasin').onclick=()=>document.body.classList.remove('mode-magasin');
+let wl=null;
+async function veille(on){try{if(on&&navigator.wakeLock)wl=await navigator.wakeLock.request('screen');else if(wl){await wl.release();wl=null}}catch(_){}}
+$('ouvrir-magasin').onclick=()=>{document.body.classList.add('mode-magasin');veille(true);render()};
+$('quitter-magasin').onclick=()=>{document.body.classList.remove('mode-magasin');veille(false);render()};
+$('masquer-faits').onclick=()=>{const on=document.body.classList.toggle('masque-faits');$('masquer-faits').setAttribute('aria-pressed',on);render()};
 
 // Paramètres
 $('version').textContent='v'+VERSION;
@@ -667,6 +760,75 @@ $('voile').oninput=e=>{fondReg.voile=+e.target.value;reglerFond();saveFond()};
 $('flou-zero').onclick=()=>{fondReg.flou=0;reglerFond();saveFond()};
 appliquerFond();
 idbGet('fond').then(d=>{if(typeof d==='string'&&d){fondData=d;appliquerFond()}}).catch(()=>{});
+
+// Messages avec annulation
+let toastT=0,toastUndo=null;
+function toast(msg,undo){
+  $('toast-txt').textContent=msg;toastUndo=undo||null;$('toast-undo').hidden=!undo;
+  $('toast').classList.add('on');clearTimeout(toastT);
+  toastT=setTimeout(()=>$('toast').classList.remove('on'),undo?6000:3500);
+}
+$('toast-undo').onclick=()=>{const u=toastUndo;toastUndo=null;$('toast').classList.remove('on');if(u)u()};
+
+// Options du formulaire, recherche dans les produits
+$('opt-btn').onclick=()=>{const c=$('f').classList.toggle('compact');$('opt-btn').setAttribute('aria-expanded',!c)};
+$('cat-q').oninput=renderCat;
+
+// Fenêtre de modification d'un article
+let editIt=null;
+function editer(it){
+  editIt=it;$('edit-titre').textContent=it.nom;
+  $('e-prix').value=it.prix??'';$('e-qte').value=it.qte;$('e-unite').value=it.unite||'';
+  $('edit-dlg').showModal();setTimeout(()=>$('e-prix').select(),60);
+}
+$('e-ok').onclick=()=>{
+  const it=editIt;if(!it)return;
+  it.prix=toNum($('e-prix').value);it.qte=Math.max(1,parseInt($('e-qte').value)||1);it.unite=$('e-unite').value.trim();
+  remember(it.nom,it.prix,undefined,undefined,it.unite);
+  $('edit-dlg').close();save();render();
+};
+$('e-annuler').onclick=()=>$('edit-dlg').close();
+['e-prix','e-qte','e-unite'].forEach(id=>$(id).addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('e-ok').click()}}));
+$('edit-dlg').addEventListener('click',e=>{
+  const r=e.currentTarget.getBoundingClientRect();
+  if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)e.currentTarget.close();
+});
+
+// Sauvegarde : export, import (fusion sans suppression), copie automatique
+function fusionner(d){
+  if(!d||!Array.isArray(d.cat))throw 0;
+  let n=0;
+  d.cat.forEach(c=>{if(c&&c.nom&&!find(c.nom)){cat.push({nom:String(c.nom),prix:c.prix??null,photo:c.photo||null,rayon:c.rayon||null,unite:c.unite||''});n++}});
+  (d.rayons||[]).forEach(r=>{if(typeof r==='string'&&!rayons.some(x=>norm(x)===norm(r)))rayons.push(r)});
+  Object.entries(d.couleurs||{}).forEach(([k,v])=>{if(!couleursRayons[k])couleursRayons[k]=v});
+  (d.items||[]).forEach(i=>{if(i&&i.nom&&!items.some(x=>norm(x.nom)===norm(i.nom)))items.push({nom:String(i.nom),prix:i.prix??null,qte:Math.max(1,+i.qte||1),unite:i.unite||'',done:!!i.done})});
+  save();render();return n;
+}
+const msgFusion=n=>(n?n+' produit'+(n>1?'s':'')+' ajouté'+(n>1?'s':''):'Aucun produit manquant')+'. Rien n\'a été supprimé.';
+$('exporter').onclick=()=>{
+  const nom='courses-sauvegarde-'+new Date().toISOString().slice(0,10)+'.json';
+  const blob=new Blob([JSON.stringify({app:'courses',date:new Date().toISOString(),items,cat,rayons,couleurs:couleursRayons})],{type:'application/json'});
+  try{
+    const f=new File([blob],nom,{type:'application/json'});
+    if(navigator.canShare&&navigator.canShare({files:[f]})){navigator.share({files:[f],title:nom}).catch(()=>{});return}
+  }catch(_){}
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=nom;document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  $('sauv-etat').textContent='Fichier exporté.';
+};
+$('importer').onclick=()=>$('import-fichier').click();
+$('import-fichier').onchange=async e=>{
+  const f=e.target.files[0];e.target.value='';if(!f)return;
+  try{$('sauv-etat').textContent=msgFusion(fusionner(JSON.parse(await f.text())))}
+  catch(_){$('sauv-etat').textContent="Ce fichier n'est pas une sauvegarde valide."}
+};
+$('restaurer').onclick=()=>{
+  try{
+    const b=JSON.parse(localStorage.getItem('courses-backup-auto-v1')||'null');
+    if(!b)throw 0;
+    $('sauv-etat').textContent=msgFusion(fusionner(b))+' (copie du '+b.jour+', sans photos)';
+  }catch(_){$('sauv-etat').textContent="Aucune copie automatique disponible."}
+};
 
 save();render();
 if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js'));
